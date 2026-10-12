@@ -64,6 +64,7 @@ Her yenilik, öncekinin üzerine yazılmadan yeni bir sürüm dosyası olarak ek
 | `speedreader-v4.html` | Kitaplık (IndexedDB), istatistikler, anlama kontrolü, sayfa gezinme ve hizalama düzeltmeleri |
 | `speedreader-v5.html` | Tam ekran ayar çubuğu, sıçrama modlu nokta takibi, ölçeklenebilir egzersiz alanı, önizleme modu, bilimsel temel sekmesi |
 | `speedreader-v6.html` | EPUB desteği, cihazlar arası yedek al/yükle, telefon düzeni, taşan kelimelerde otomatik yazı küçültme |
+| `speedreader-v7.html` | iOS'ta da çalışan tam ekran modu, CDN kütüphaneleri için bütünlük doğrulaması (SRI) |
 
 En güncel sürüm en yüksek numaralı dosyadır. `index.html` otomatik olarak en günceline yönlendirir.
 
@@ -81,7 +82,15 @@ Bilgisayarda okuduğun kitaba telefondan devam etmek için:
 
 Kitap metni, kaldığın yer, yer imleri ve ayarlar birlikte taşınır; kitap kaldığın yerden açılır. Aynı kitabı iki cihazda da okuduysan, okuma konumu en son ilerleyen cihazınki geçerli olur.
 
-Not: iOS Safari'de tam ekran düğmesi çalışmayabilir (tarayıcı kısıtı); diğer tüm özellikler çalışır.
+Tam ekran modu v7'den itibaren iOS'ta da çalışır: iOS Safari (ve onun motorunu kullanan iOS Chrome) `requestFullscreen` API'sini desteklemediği için uygulama otomatik olarak CSS tabanlı bir tam ekran moduna geçer. Çıkmak için aynı düğmeye bas ya da `Esc`.
+
+## Güvenlik ve gizlilik
+
+- **Veri cihazdan çıkmaz.** Sunucu, hesap, analitik veya takip kodu yok. Aktardığın kitaplar ve okuma konumun yalnızca kendi tarayıcının deposunda (localStorage / IndexedDB) tutulur; hiçbir yere gönderilmez.
+- **Dosyalar yerelde işlenir.** PDF, EPUB ve DOCX dosyaları tarayıcının içinde ayrıştırılır, yüklenmez.
+- **CDN bütünlük doğrulaması (SRI).** Uygulamanın kullandığı üç kütüphane cdnjs'ten gelir. v7'den itibaren her biri `integrity` parmak iziyle sabitlenmiştir: CDN'den gelen dosya birebir eşleşmezse tarayıcı çalıştırmaz. Bu, CDN'in ele geçirilmesi durumunda kod enjeksiyonunu engeller.
+- **Metin güvenli şekilde işlenir.** İçe aktarılan belgelerdeki HTML kaçırılır (escape), EPUB içindeki `script` ve `style` etiketleri ayrıştırma sırasında silinir; belge içeriği hiçbir zaman çalıştırılabilir kod olarak sayfaya yazılmaz.
+- **Depo herkese açıktır**, ancak okuma verilerin depoda değildir — yalnızca uygulama kodu yayınlanmıştır.
 
 ## Teknik notlar
 
