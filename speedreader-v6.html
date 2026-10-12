@@ -71,6 +71,10 @@
   @media (max-width: 760px) { .panels { grid-template-columns: 1fr; } }
   .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; }
   .panel.span2 { grid-column: 1 / -1; }
+  /* Izgara/esnek öğeler varsayılan min-width:auto ile içeriklerinin min-content
+     genişliğinden daha dar olmayı reddeder; tek bir uzun satır tüm sütunu
+     şişirip sayfayı yatay kaydırılabilir hale getiriyordu. */
+  .panels, .panel, .grid4, .grid4 > .field, .row2 > .field, .stat-grid, .lib-item, .bm-item { min-width: 0; }
   .panel h2 { font-size: 13px; font-weight: 600; margin: 0 0 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 
   textarea { width: 100%; min-height: 150px; resize: vertical; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); padding: 12px; font-size: 14px; line-height: 1.5; font-family: inherit; }
