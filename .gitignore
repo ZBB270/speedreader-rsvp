@@ -1,0 +1,11 @@
+# Kişisel okuma materyalleri (telifli kitaplar) — depoya girmez
+*.pdf
+konsantrasyon.txt
+
+# Araç ayarları
+.claude/
+
+# İşletim sistemi artıkları
+Thumbs.db
+desktop.ini
+.DS_Store
