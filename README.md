@@ -8,7 +8,7 @@ HTML dosyasını indirip çift tıklaman yeterli — sunucu, kurulum veya intern
 
 **Okuma**
 - Metni yapıştırma, dosya sürükle-bırak, dosya seçme ve panodan aktarma
-- Desteklenen biçimler: `.txt`, `.md`, `.pdf`, `.docx`
+- Desteklenen biçimler: `.txt`, `.md`, `.pdf`, `.docx`, `.epub`
 - Hız (60–1200 wpm), kelime grubu (1–6), yazı boyutu ayarları
 - Odak harfi vurgusu ve üç hizalama modu: ortala / odak harfini sabitle / soldan sabitle
 - Akıllı tempo: uzun kelimelerde ve noktalama sonrasında otomatik duraklama
@@ -23,6 +23,7 @@ HTML dosyasını indirip çift tıklaman yeterli — sunucu, kurulum veya intern
 - Kitaplık: aktarılan kitaplar IndexedDB'de saklanır, yüzde ilerlemeleriyle listelenir
 - Oturum hafızası: tarayıcı kapansa da kaldığın yerden devam eder
 - Önizleme modu: her paragrafın ilk cümlesinden metnin haritasını çıkarır
+- Yedek al / yükle: kitapları, konumları, yer imlerini ve ayarları tek dosyada taşır
 
 **Ölçme**
 - Anlama kontrolü: okunan bölümden boşluk doldurma soruları üretir
@@ -62,13 +63,30 @@ Her yenilik, öncekinin üzerine yazılmadan yeni bir sürüm dosyası olarak ek
 | `speedreader-v3.html` | Takip görünümü, oturum hafızası, PDF sayfa takibi, yer imleri, akıllı tempo, temalar |
 | `speedreader-v4.html` | Kitaplık (IndexedDB), istatistikler, anlama kontrolü, sayfa gezinme ve hizalama düzeltmeleri |
 | `speedreader-v5.html` | Tam ekran ayar çubuğu, sıçrama modlu nokta takibi, ölçeklenebilir egzersiz alanı, önizleme modu, bilimsel temel sekmesi |
+| `speedreader-v6.html` | EPUB desteği, cihazlar arası yedek al/yükle, telefon düzeni, taşan kelimelerde otomatik yazı küçültme |
 
-En güncel sürüm en yüksek numaralı dosyadır.
+En güncel sürüm en yüksek numaralı dosyadır. `index.html` otomatik olarak en günceline yönlendirir.
+
+## Telefonda kullanım
+
+Uygulama telefon tarayıcısında da çalışır; düzen dar ekrana uyarlanmıştır ve ekrana sığmayan kelime grupları otomatik küçülür.
+
+**Önemli:** Kaldığın yer, kitaplık ve ayarlar tarayıcının kendi deposunda (localStorage / IndexedDB) tutulur. Bu depo **cihaza ve tarayıcıya özeldir**; sunucu veya hesap olmadığı için cihazlar arasında kendiliğinden eşitlenmez.
+
+Bilgisayarda okuduğun kitaba telefondan devam etmek için:
+
+1. Bilgisayarda **Kitaplık → Yedek al** (bir `.json` dosyası iner)
+2. Dosyayı telefona gönder (WhatsApp, e-posta, bulut — nasıl kolaysa)
+3. Telefonda uygulamayı aç → **Kitaplık → Yedek yükle** → dosyayı seç
+
+Kitap metni, kaldığın yer, yer imleri ve ayarlar birlikte taşınır; kitap kaldığın yerden açılır. Aynı kitabı iki cihazda da okuduysan, okuma konumu en son ilerleyen cihazınki geçerli olur.
+
+Not: iOS Safari'de tam ekran düğmesi çalışmayabilir (tarayıcı kısıtı); diğer tüm özellikler çalışır.
 
 ## Teknik notlar
 
 - Derleme adımı, paket yöneticisi veya bağımlılık kurulumu yok — tek bir HTML dosyası
-- PDF okuma [pdf.js](https://mozilla.github.io/pdf.js/), DOCX okuma [mammoth.js](https://github.com/mwilliamson/mammoth.js) ile yapılır (cdnjs üzerinden)
+- PDF okuma [pdf.js](https://mozilla.github.io/pdf.js/), DOCX okuma [mammoth.js](https://github.com/mwilliamson/mammoth.js), EPUB açma [JSZip](https://stuk.github.io/jszip/) ile yapılır (cdnjs üzerinden)
 - Ayarlar ve okuma konumu `localStorage`, kitap metinleri `IndexedDB` içinde saklanır — veriler yalnızca kendi tarayıcında kalır, hiçbir yere gönderilmez
 - Oturum hafızasının çalışması için dosyanın tarayıcıda açılması gerekir; depoya erişilemeyen ortamlarda uygulama bunu kendisi bildirir
 
