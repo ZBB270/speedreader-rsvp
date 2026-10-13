@@ -2,7 +2,7 @@
   "name": "Hızlı Okuma",
   "short_name": "Hızlı Okuma",
   "description": "RSVP yöntemiyle hızlı okuma uygulaması: kitaplarını aktar, kaldığın yerden devam et.",
-  "start_url": "./speedreader-v8.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",

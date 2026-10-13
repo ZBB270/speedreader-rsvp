@@ -1,12 +1,11 @@
 /* Hızlı Okuma — çevrimdışı çalışma katmanı.
    Uygulama dosyalarını cihazda saklar; internet yokken de açılır. */
 
-const CACHE = 'hizliokuma-v8';
+const CACHE = 'hizliokuma-8.1';
 
 const ASSETS = [
   './',
   './index.html',
-  './speedreader-v8.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
@@ -47,7 +46,7 @@ self.addEventListener('fetch', event => {
           caches.open(CACHE).then(c => c.put(req, kopya));
           return res;
         })
-        .catch(() => caches.match(req).then(r => r || caches.match('./speedreader-v8.html')))
+        .catch(() => caches.match(req).then(r => r || caches.match('./index.html')))
     );
     return;
   }

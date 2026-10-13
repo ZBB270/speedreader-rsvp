@@ -52,22 +52,24 @@ Uygulamadaki yöntemlerin literatürde nerede durduğunu kaynaklarıyla birlikte
 | `B` | Yer imi ekle |
 | `F` | Tam ekran |
 
+Telefonda okuma alanında parmak hareketleri: **dokun** başlat/durdur · **yukarı/aşağı kaydır** hızı değiştir · **sağa/sola kaydır** 10 kelime ileri/geri.
+
 ## Sürümler
 
-Her yenilik, öncekinin üzerine yazılmadan yeni bir sürüm dosyası olarak eklenir.
+Uygulama tek dosyadır: `index.html`. Adrese giren herkes her zaman en güncel sürüme ulaşır.
 
-| Sürüm | Eklenenler |
-|---|---|
-| `speedreader-v1.html` | Temel RSVP okuyucu, hız ve kelime grubu ayarı |
-| `speedreader-v2.html` | Çok kelimeli gruplarda odak vurgusu, dosya içe aktarma, göz egzersizleri sekmesi |
-| `speedreader-v3.html` | Takip görünümü, oturum hafızası, PDF sayfa takibi, yer imleri, akıllı tempo, temalar |
-| `speedreader-v4.html` | Kitaplık (IndexedDB), istatistikler, anlama kontrolü, sayfa gezinme ve hizalama düzeltmeleri |
-| `speedreader-v5.html` | Tam ekran ayar çubuğu, sıçrama modlu nokta takibi, ölçeklenebilir egzersiz alanı, önizleme modu, bilimsel temel sekmesi |
-| `speedreader-v6.html` | EPUB desteği, cihazlar arası yedek al/yükle, telefon düzeni, taşan kelimelerde otomatik yazı küçültme |
-| `speedreader-v7.html` | iOS'ta da çalışan tam ekran modu, CDN kütüphaneleri için bütünlük doğrulaması (SRI) |
-| `speedreader-v8.html` | Kütüphaneler depoya taşındı (dış bağlantı yok), çevrimdışı çalışma, telefona kurulabilir uygulama |
+Sürüm geçmişi git'in kendisinde tutulur — her commit bir sürümdür, istenen ana geri dönülebilir. Önemli adımlar etiketlenmiştir:
 
-En güncel sürüm en yüksek numaralı dosyadır. `index.html` otomatik olarak en günceline yönlendirir.
+```bash
+git tag                 # sürüm listesi
+git show v6.0 --stat    # o sürümde neler değişmiş
+git checkout v6.0       # o sürümün tam haline geri dön
+git switch -            # güncel sürüme geri çık
+```
+
+Geliştirme boyunca eklenenler: temel RSVP okuyucu ve hız/grup ayarları → çok kelimeli odak vurgusu, dosya içe aktarma, göz egzersizleri → takip görünümü, oturum hafızası, sayfa takibi, yer imleri, temalar → kitaplık, istatistikler, anlama kontrolü → tam ekran ayar çubuğu, sıçrama modlu egzersiz, önizleme modu, bilimsel temel → EPUB, cihazlar arası yedekleme, telefon düzeni → iOS tam ekran, güvenlik sertleştirmesi → dış bağımlılığın kaldırılması, çevrimdışı çalışma, kurulabilir uygulama.
+
+> Not: Proje başlarken her sürüm ayrı bir dosyaydı (`speedreader-v1.html` … `v8`). Git'e geçildikten sonra bu gereksiz hale geldiği için dosyalar kaldırıldı; hepsi git geçmişinde duruyor.
 
 ## Telefonda kullanım
 
