@@ -220,18 +220,29 @@
   .schulte-cell { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; aspect-ratio: 1; cursor: pointer; user-select: none; }
   .schulte-cell.done { background: var(--hl); color: var(--accent-3); border-color: var(--accent-3); }
   .schulte-cell.wrong { border-color: var(--accent-2); }
-  /* sabit bakış noktası tablonun tam ortasında olmalı: egzersiz "merkeze bak,
-     çevresel görüşle bul" üzerine kurulu */
+  /* Sabit bakış noktası tablonun ortasını göstermeli ama sayıyı örtmemeli.
+     Tek sayılı tabloda merkez bir hücredir -> hücre çerçevelenir.
+     Çift sayılı tabloda merkez hücre çizgilerinin kesişimidir -> nokta konur. */
   .schulte-wrap { position: relative; }
   .schulte-center-dot {
     position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
     width: 12px; height: 12px; border-radius: 50%; background: var(--accent-2);
     pointer-events: none; z-index: 2; box-shadow: 0 0 0 3px var(--panel);
+    display: none;
   }
+  .schulte-wrap.cift .schulte-center-dot { display: block; }
+  .schulte-cell.merkez { box-shadow: inset 0 0 0 2px var(--accent-2); }
   .schulte-meta { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-top: 14px; }
   /* blok görme: rakamlar odak noktasına göre konumlanır */
   .blok-stage { height: var(--ex-h, 300px); background: var(--panel-2); border-radius: 12px; position: relative; overflow: hidden; }
   .blok-fix { position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--accent-2); }
+  /* ikili blokta sabit merkez nokta yok; bakış noktası rakamların altında gezer */
+  .blok-stage.ikili .blok-fix { display: none; }
+  .blok-hedef {
+    position: absolute; width: 11px; height: 11px; border-radius: 50%;
+    background: var(--accent-2); transform: translate(-50%, 0);
+    transition: left 0.14s ease-out;
+  }
   .blok-digit {
     position: absolute; font-weight: 700; letter-spacing: 0.12em; white-space: pre;
     font-size: clamp(22px, calc(var(--ex-h, 300px) * 0.11), 72px);
@@ -251,13 +262,19 @@
     content: 'Gördüğün rakamlar'; color: var(--muted);
     font-size: 14px; font-weight: 500; letter-spacing: normal;
   }
-  .blok-tuslar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 8px; }
+  /* telefon tuş takımı düzeni: 123 / 456 / 789 / sil-0-onay */
+  .blok-tuslar {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    margin: 8px auto 0; max-width: 320px;
+  }
   .blok-tuslar button {
-    padding: 14px 0; font-size: 18px; min-width: 0;
+    padding: 16px 0; font-size: 22px; font-weight: 700; min-width: 0;
     background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
   }
-  .blok-tuslar button[data-k="ok"] { grid-column: span 4; background: var(--accent); color: #fff; border-color: var(--accent); }
+  .blok-tuslar button[data-k="ok"] { background: var(--accent); color: #fff; border-color: var(--accent); font-size: 18px; }
+  .blok-tuslar button[data-k="sil"] { font-size: 18px; }
   .blok-tuslar button:disabled { opacity: 0.3; }
+  .blok-ekran { max-width: 320px; margin: 0 auto; }
   .blok-sonuc { margin-top: 10px; font-size: 14px; font-weight: 600; min-height: 22px; }
   .blok-sonuc.dogru { color: var(--accent-3); }
   .blok-sonuc.yanlis { color: var(--accent-2); }
@@ -295,9 +312,24 @@
     padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
     box-sizing: border-box;
   }
-  .ex-stage.css-immersive .ex-track, .ex-stage.css-immersive .grow-stage, .ex-stage.css-immersive .blok-stage { height: 56vh; height: 56dvh; }
+  .ex-stage.css-immersive .ex-track, .ex-stage.css-immersive .grow-stage { height: 56vh; height: 56dvh; }
   .ex-stage.css-immersive .flash-box { height: 50vh; height: 50dvh; }
-  .ex-stage.css-immersive .ex-instructions { display: none; }
+  /* blok görmede tuş takımı ve Başlat da sığmalı, alan daha kısa tutulur */
+  .ex-stage.css-immersive .blok-stage { height: 34vh; height: 34dvh; }
+  /* tam ekranda açıklama ve kaydırıcılar gizlenir, düğmeler görünür kalır */
+  .ex-stage.css-immersive .ex-instructions, .ex-stage:fullscreen .ex-instructions,
+  .ex-stage.css-immersive .ex-controls .field, .ex-stage:fullscreen .ex-controls .field,
+  .ex-stage.css-immersive .blok-skor, .ex-stage:fullscreen .blok-skor { display: none; }
+  .ex-stage.css-immersive .ex-controls, .ex-stage:fullscreen .ex-controls { justify-content: center; margin-top: 10px; }
+
+  /* tam ekrandayken çıkış düğmesi kaplayan kutunun içinde olmalı */
+  .ex-kapat {
+    position: absolute; top: 10px; right: 10px; z-index: 20;
+    padding: 10px 16px; font-size: 14px; min-width: 0;
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+  }
+  .ex-stage:fullscreen, .ex-stage.css-immersive { position: relative; }
+  .ex-stage.css-immersive { position: fixed; }
 
   .badge { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.3px; padding: 2px 7px; border-radius: 20px; margin-left: 6px; vertical-align: middle; }
   .badge.clinical { background: rgba(53,196,138,0.18); color: var(--accent-3); border: 1px solid var(--accent-3); }
@@ -365,7 +397,7 @@
 <div class="wrap">
   <div class="title-row">
     <h1>Hızlı Okuma</h1>
-    <span class="version-badge">8.3</span>
+    <span class="version-badge">8.4</span>
   </div>
   <div class="subtitle">Kitaplığından seç, kaldığın yerden devam et, gösterimi kendine göre ayarla.</div>
 
@@ -792,9 +824,9 @@
             <button type="button" data-k="7">7</button>
             <button type="button" data-k="8">8</button>
             <button type="button" data-k="9">9</button>
-            <button type="button" data-k="0">0</button>
             <button type="button" data-k="sil" title="Sil">⌫</button>
-            <button type="button" data-k="ok">Kontrol</button>
+            <button type="button" data-k="0">0</button>
+            <button type="button" data-k="ok" title="Kontrol">✓</button>
           </div>
         </div>
         <div class="ex-controls">
@@ -815,8 +847,8 @@
             <input type="range" id="blokKademe" min="1" max="6" step="1" value="1">
           </div>
           <div class="field">
-            <label>Gösterim süresi <span class="value" id="blokSureValue">300</span> ms</label>
-            <input type="range" id="blokSure" min="80" max="1000" step="20" value="300">
+            <label>Gösterim süresi <span class="value" id="blokSureValue">250</span> ms</label>
+            <input type="range" id="blokSure" min="80" max="1000" step="10" value="250">
           </div>
           <div class="field">
             <label>Otomatik zorluk</label>
@@ -2210,7 +2242,18 @@
   }
   $('exSize').addEventListener('input', () => { applyExSize(); saveSoon(); });
   let exCssTamEkran = null;
+  // Çıkış düğmesi ekranı kaplayan kutunun İÇİNDE olmalı; dışarıdaki araç
+  // çubuğu tam ekranda görünmediği için oradaki düğmeye ulaşılamıyor.
+  function exKapatDugmesiEkle(panel) {
+    if (panel.querySelector('.ex-kapat')) return;
+    const b = document.createElement('button');
+    b.className = 'ex-kapat';
+    b.textContent = '✕ Çık';
+    b.addEventListener('click', exTamEkranKapat);
+    panel.appendChild(b);
+  }
   function exTamEkranKapat() {
+    document.querySelectorAll('.ex-kapat').forEach(b => b.remove());
     if (document.fullscreenElement && document.exitFullscreen) Promise.resolve(document.exitFullscreen()).catch(() => {});
     if (exCssTamEkran) {
       exCssTamEkran.classList.remove('css-immersive');
@@ -2220,18 +2263,19 @@
     $('exFsBtn').textContent = '⛶ Egzersizi tam ekran yap';
   }
   function exTamEkranAc(panel) {
-    const ac = () => {
+    const cssModu = () => {
       exCssTamEkran = panel;
       panel.classList.add('css-immersive');
       document.body.classList.add('immersive-open');
+      exKapatDugmesiEkle(panel);
       $('exFsBtn').textContent = '✕ Tam ekrandan çık';
     };
     // gerçek tam ekranı dene; iOS desteklemiyorsa CSS moduna düş
     if (panel.requestFullscreen) {
       Promise.resolve(panel.requestFullscreen())
-        .then(() => { $('exFsBtn').textContent = '✕ Tam ekrandan çık'; })
-        .catch(ac);
-    } else ac();
+        .then(() => { exKapatDugmesiEkle(panel); $('exFsBtn').textContent = '✕ Tam ekrandan çık'; })
+        .catch(cssModu);
+    } else cssModu();
   }
   $('exFsBtn').addEventListener('click', () => {
     if (document.fullscreenElement || exCssTamEkran) { exTamEkranKapat(); return; }
@@ -2239,7 +2283,11 @@
     if (panel) exTamEkranAc(panel);
   });
   document.addEventListener('fullscreenchange', () => {
-    if (!document.fullscreenElement && !exCssTamEkran) $('exFsBtn').textContent = '⛶ Egzersizi tam ekran yap';
+    // tarayıcı kendi yoluyla (Esc) çıkarsa da temizle
+    if (!document.fullscreenElement && !exCssTamEkran) {
+      document.querySelectorAll('.ex-kapat').forEach(b => b.remove());
+      $('exFsBtn').textContent = '⛶ Egzersizi tam ekran yap';
+    }
   });
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && exCssTamEkran) { e.preventDefault(); exTamEkranKapat(); }
@@ -2400,9 +2448,12 @@
     for (let i = nums.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [nums[i], nums[j]] = [nums[j], nums[i]]; }
     schulteGrid.style.gridTemplateColumns = 'repeat(' + n + ', 1fr)';
     schulteGrid.innerHTML = '';
-    nums.forEach(num => {
+    const tek = n % 2 === 1;
+    const merkezIndex = tek ? Math.floor(n * n / 2) : -1;
+    document.querySelector('.schulte-wrap').classList.toggle('cift', !tek);
+    nums.forEach((num, i) => {
       const cell = document.createElement('div');
-      cell.className = 'schulte-cell';
+      cell.className = 'schulte-cell' + (i === merkezIndex ? ' merkez' : '');
       cell.textContent = num;
       cell.addEventListener('click', () => onSchulteClick(cell, num));
       schulteGrid.appendChild(cell);
@@ -2457,7 +2508,10 @@
      yazdır → puanla. Fark yalnızca rakamların konumu ve merkeze uzaklığı. */
   const blokStage = $('blokStage'), blokEkran = $('blokEkran');
   let blokPlaying = false, blokTimer = null, blokBeklenen = '', blokDeger = '';
-  let blokCevapAcik = false;
+  let blokCevapAcik = false, blokNoktaTimer = null;
+  // otomatik modda açıklık basamaklı değil sürekli artar; üst sınır alana göre
+  // her turda hesaplanır, sınıra dayanınca rakam sayısı artar
+  let blokAcilim = 0, blokMaxAcilim = 0;
   let blokPuan = 0, blokDogru = 0, blokToplam = 0, blokSeri = 0, blokYanlisSeri = 0;
   const K_BLOK = 'speedreader.blok.rekor';
 
@@ -2476,7 +2530,32 @@
   }
 
   function blokTemizle() {
-    blokStage.querySelectorAll('.blok-digit').forEach(el => el.remove());
+    blokStage.querySelectorAll('.blok-digit, .blok-hedef').forEach(el => el.remove());
+    clearTimeout(blokNoktaTimer);
+  }
+
+  function blokBirim() {
+    const w = blokStage.clientWidth || 300, h = blokStage.clientHeight || 300;
+    return Math.max(14, Math.min(w, h) * 0.06);
+  }
+  function blokAcikDeger() {
+    if ($('blokOto').value === 'on') return blokAcilim || blokBirim();
+    return parseInt($('blokKademe').value, 10) * blokBirim();
+  }
+  function blokRakamEl(metin) {
+    const el = document.createElement('div');
+    el.className = 'blok-digit';
+    el.textContent = metin;
+    el.style.visibility = 'hidden';
+    blokStage.appendChild(el);
+    return el;
+  }
+  function blokKoy(el, x, y, hiza) {
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    el.style.transform = hiza === 'sol' ? 'translate(0, -50%)'
+      : hiza === 'sag' ? 'translate(-100%, -50%)' : 'translate(-50%, -50%)';
+    el.style.visibility = 'visible';
   }
 
   function blokUret() {
@@ -2491,44 +2570,80 @@
     return { beklenen: hepsi, gruplar: [hepsi.slice(0, kes), hepsi.slice(kes)] };
   }
 
+  // bir satırdaki rakamları, aralarında verilen boşlukla, cx çevresinde ortalar
+  function blokSatir(els, cx, y, bosluk) {
+    const toplam = els.reduce((t, e) => t + e.offsetWidth, 0) + bosluk * Math.max(0, els.length - 1);
+    let x = cx - toplam / 2;
+    els.forEach(e => { blokKoy(e, x, y, 'sol'); x += e.offsetWidth + bosluk; });
+    return toplam;
+  }
+
   function blokGoster(gruplar) {
     blokTemizle();
-    const dikey = $('blokMod').value === 'dikey';
+    const mod = $('blokMod').value;
     const w = blokStage.clientWidth, h = blokStage.clientHeight;
-    // açıklık alanın boyutuna oranlı: telefonda da büyük monitörde de anlamlı kalsın
-    const birim = Math.max(14, Math.min(w, h) * 0.06);
-    let acik = parseInt($('blokKademe').value, 10) * birim;
+    const cx = w / 2, cy = h / 2;
+    let acik = blokAcikDeger();
+    blokStage.classList.toggle('ikili', mod === 'ikili');
 
-    const els = gruplar.filter(Boolean).map(metin => {
-      const el = document.createElement('div');
-      el.className = 'blok-digit';
-      el.textContent = metin;
-      el.style.visibility = 'hidden';
-      blokStage.appendChild(el);
-      return el;
-    });
-    if (!els.length) return;
+    if (mod === 'dikey') {
+      // Rakamlar odak noktasının çevresine dağılır: üst satır ve alt satır,
+      // satır içinde de birbirinden açılır. Her doğru cevapta dört yöne büyür.
+      const ustEls = gruplar[0].split('').map(blokRakamEl);
+      const altEls = (gruplar[1] || '').split('').map(blokRakamEl);
+      const hepsi = ustEls.concat(altEls);
+      if (!hepsi.length) return;
+      const yuk = hepsi[0].offsetHeight;
+      const genToplam = d => d.reduce((t, e) => t + e.offsetWidth, 0);
+      const enGenisSatir = Math.max(genToplam(ustEls), genToplam(altEls));
+      const bosluklar = Math.max(1, Math.max(ustEls.length, altEls.length) - 1);
 
-    // Açıklık bu egzersizin asıl zorluk değişkeni olduğu için sığdırmak
-    // gerektiğinde önce yazıyı küçültüyoruz; açıklığı ancak son çare kısıyoruz.
-    const olc = el => (dikey ? el.offsetHeight : el.offsetWidth);
-    const yariAlan = (dikey ? h : w) / 2 - 8;
-    let enBuyuk = Math.max.apply(null, els.map(olc));
-    if (acik + enBuyuk > yariAlan) {
-      const temel = parseFloat(getComputedStyle(els[0]).fontSize);
-      const oran = Math.max(0.25, (yariAlan - acik) / enBuyuk);
-      els.forEach(el => { el.style.fontSize = Math.max(12, temel * oran) + 'px'; });
-      enBuyuk = Math.max.apply(null, els.map(olc));
+      // Yazı küçültme bir ilerleme aracı değil, acil durum önlemidir: yalnızca
+      // rakamlar en küçük açıklıkta bile sığmıyorsa devreye girer. Aksi halde
+      // açıklık kenara hiç dayanmaz ve seviye atlaması tetiklenmez.
+      let maxY = h / 2 - 8 - yuk;
+      let maxX = (w - 16 - enGenisSatir) / bosluklar;
+      if (Math.min(maxY, maxX) < blokBirim()) {
+        const temel = parseFloat(getComputedStyle(hepsi[0]).fontSize);
+        hepsi.forEach(e => { e.style.fontSize = Math.max(12, temel * 0.6) + 'px'; });
+        maxY = h / 2 - 8 - hepsi[0].offsetHeight;
+        maxX = (w - 16 - Math.max(genToplam(ustEls), genToplam(altEls))) / bosluklar;
+      }
+      blokMaxAcilim = Math.max(blokBirim(), Math.min(maxY, maxX));
+      acik = Math.min(acik, blokMaxAcilim);
+      blokSatir(ustEls, cx, cy - acik, acik);
+      if (altEls.length) blokSatir(altEls, cx, cy + acik, acik);
+      return;
     }
-    if (acik + enBuyuk > yariAlan) acik = Math.max(birim, yariAlan - enBuyuk);
 
-    const yerlestir = (el, stil) => { Object.assign(el.style, stil); el.style.visibility = 'visible'; };
-    if (dikey) {
-      yerlestir(els[0], { left: '50%', top: (h / 2 - acik) + 'px', transform: 'translate(-50%, -100%)' });
-      if (els[1]) yerlestir(els[1], { left: '50%', top: (h / 2 + acik) + 'px', transform: 'translate(-50%, 0)' });
-    } else {
-      yerlestir(els[0], { left: (w / 2 - acik) + 'px', top: '50%', transform: 'translate(-100%, -50%)' });
-      if (els[1]) yerlestir(els[1], { left: (w / 2 + acik) + 'px', top: '50%', transform: 'translate(0, -50%)' });
+    // yatay ve ikili: iki grup, iç kenarları merkezden "acik" kadar uzakta
+    const els = gruplar.filter(Boolean).map(blokRakamEl);
+    if (!els.length) return;
+    let enBuyuk = Math.max.apply(null, els.map(e => e.offsetWidth));
+    // yazı küçültme yalnızca acil durum önlemi (bkz. dikey daldaki açıklama)
+    if (w / 2 - 8 - enBuyuk < blokBirim()) {
+      const temel = parseFloat(getComputedStyle(els[0]).fontSize);
+      const oran = Math.max(0.25, (w / 2 - 8 - blokBirim()) / enBuyuk);
+      els.forEach(e => { e.style.fontSize = Math.max(12, temel * oran) + 'px'; });
+      enBuyuk = Math.max.apply(null, els.map(e => e.offsetWidth));
+    }
+    blokMaxAcilim = Math.max(blokBirim(), w / 2 - 8 - enBuyuk);
+    acik = Math.min(acik, blokMaxAcilim);
+    blokKoy(els[0], cx - acik, cy, 'sag');
+    if (els[1]) blokKoy(els[1], cx + acik, cy, 'sol');
+
+    // İkili blokta bakış noktası ortada değil: rakamların altında belirir ve
+    // sağdan sola sıçrayarak gözü iki bloğa sırayla götürür.
+    if (mod === 'ikili' && els[1]) {
+      const nokta = document.createElement('div');
+      nokta.className = 'blok-hedef';
+      blokStage.appendChild(nokta);
+      const altY = cy + els[0].offsetHeight / 2 + 10;
+      const sagX = cx + acik + els[1].offsetWidth / 2;
+      const solX = cx - acik - els[0].offsetWidth / 2;
+      nokta.style.top = altY + 'px';
+      nokta.style.left = sagX + 'px';
+      blokNoktaTimer = setTimeout(() => { nokta.style.left = solX + 'px'; }, Math.max(80, parseInt($('blokSure').value, 10) * 0.45));
     }
   }
 
@@ -2547,7 +2662,11 @@
     blokEkran.textContent = v;
   }
   function blokDurum() {
-    return 'Seviye ' + $('blokSeviye').value + ' · Kademe ' + $('blokKademe').value;
+    if ($('blokOto').value === 'on') {
+      const yuzde = blokMaxAcilim > 0 ? Math.round(Math.min(100, (blokAcikDeger() / blokMaxAcilim) * 100)) : 0;
+      return 'Seviye ' + $('blokSeviye').value + ' · açıklık %' + yuzde;
+    }
+    return 'Seviye ' + $('blokSeviye').value + ' · kademe ' + $('blokKademe').value;
   }
 
   function blokTur() {
@@ -2570,30 +2689,32 @@
     }, 900);
   }
 
-  function blokZorlukAyarla(dogruMu) {
+  // Otomatik ilerleme: her doğru cevapta rakamlar biraz daha açılır; alanın
+  // kenarına dayanınca rakam sayısı artar ve açıklık ortadan yeniden başlar.
+  function blokIlerlet(dogruMu) {
     if ($('blokOto').value !== 'on') return '';
-    const kademe = $('blokKademe'), seviye = $('blokSeviye');
-    let mesaj = '';
-    if (dogruMu && blokSeri > 0 && blokSeri % 3 === 0) {
-      if (+kademe.value < +kademe.max) {
-        kademe.value = +kademe.value + 1;
-        mesaj = ' → Kademe ' + kademe.value + ', rakamlar açılıyor';
-      } else if (+seviye.value < +seviye.max) {
-        seviye.value = +seviye.value + 1;
-        kademe.value = 1;
-        mesaj = ' → Seviye ' + seviye.value + ', rakam sayısı arttı';
+    const seviye = $('blokSeviye');
+    if (dogruMu) {
+      // adım: bir seviyeyi ~8 doğru cevapta tamamlayacak büyüklükte
+      blokAcilim = blokAcikDeger() + blokBirim() * 0.7;
+      if (blokAcilim > blokMaxAcilim) {
+        if (+seviye.value < +seviye.max) {
+          seviye.value = +seviye.value + 1;
+          seviye.dispatchEvent(new Event('input'));
+          blokAcilim = blokBirim();
+          return ' → Seviye ' + seviye.value + ', rakam sayısı arttı';
+        }
+        blokAcilim = blokMaxAcilim;
+        return ' → en geniş açıklığa ulaştın';
       }
-      kademe.dispatchEvent(new Event('input'));
-      seviye.dispatchEvent(new Event('input'));
-    } else if (!dogruMu && blokYanlisSeri >= 2) {
-      if (+kademe.value > +kademe.min) {
-        kademe.value = +kademe.value - 1;
-        kademe.dispatchEvent(new Event('input'));
-        mesaj = ' → Kademe ' + kademe.value + ', biraz kolaylaştı';
-      }
-      blokYanlisSeri = 0;
+      return '';
     }
-    return mesaj;
+    if (blokYanlisSeri >= 2) {
+      blokAcilim = Math.max(blokBirim(), blokAcikDeger() - blokBirim() * 0.9);
+      blokYanlisSeri = 0;
+      return ' → biraz kolaylaştı';
+    }
+    return '';
   }
 
   function blokKontrol() {
@@ -2609,7 +2730,7 @@
       blokSeri = 0; blokYanlisSeri++;
       blokPuan -= 5;
     }
-    const yukseldi = blokZorlukAyarla(dogruMu);
+    const yukseldi = blokIlerlet(dogruMu);
     blokSonuc(dogruMu
       ? 'Doğru: ' + blokBeklenen + yukseldi
       : 'Doğrusu ' + blokBeklenen + ' — sen ' + cevap + ' yazdın' + yukseldi,
@@ -2636,6 +2757,8 @@
     if ($('blokOto').value === 'on') {
       $('blokSeviye').value = 2; $('blokSeviye').dispatchEvent(new Event('input'));
       $('blokKademe').value = 1; $('blokKademe').dispatchEvent(new Event('input'));
+      blokAcilim = blokBirim();   // açıklık ortadan başlar, doğru cevaplarla büyür
+      blokMaxAcilim = 0;
     }
     blokSkorYaz();
     $('blokPlayBtn').textContent = 'Durdur';
