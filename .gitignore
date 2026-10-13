@@ -9,3 +9,9 @@ konsantrasyon.txt
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Üçüncü taraf programlar (telifli, depoya girmez)
+*.exe
+*.msi
+*.zip
+*.rar

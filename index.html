@@ -222,6 +222,26 @@
   .schulte-cell.wrong { border-color: var(--accent-2); }
   .schulte-center-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent-2); margin: 0 auto 14px; }
   .schulte-meta { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-top: 14px; }
+  /* blok görme: rakamlar odak noktasına göre konumlanır */
+  .blok-stage { height: var(--ex-h, 300px); background: var(--panel-2); border-radius: 12px; position: relative; overflow: hidden; }
+  .blok-fix { position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--accent-2); }
+  .blok-digit {
+    position: absolute; font-weight: 700; letter-spacing: 0.12em; white-space: pre;
+    font-size: clamp(22px, calc(var(--ex-h, 300px) * 0.11), 72px);
+    font-variant-numeric: tabular-nums;
+  }
+  .blok-cevap { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .blok-cevap input {
+    flex: 1; min-width: 140px; background: var(--panel-2); border: 1px solid var(--border);
+    color: var(--text); border-radius: 10px; padding: 12px; font-size: 20px; font-weight: 700;
+    letter-spacing: 0.15em; text-align: center; font-family: inherit;
+  }
+  .blok-cevap input:focus { outline: 2px solid var(--accent); }
+  .blok-sonuc { margin-top: 10px; font-size: 14px; font-weight: 600; min-height: 22px; }
+  .blok-sonuc.dogru { color: var(--accent-3); }
+  .blok-sonuc.yanlis { color: var(--accent-2); }
+  .blok-skor { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
+
   .grow-stage { height: var(--ex-h, 300px); background: var(--panel-2); border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
   .grow-fixation { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2); z-index: 2; }
   .grow-shape { border: 2px solid var(--accent); background: var(--hl); width: 10px; height: 10px; }
@@ -586,6 +606,7 @@
       <button class="ex-tab-btn" data-ex="flash">Şimşek Kelime</button>
       <button class="ex-tab-btn" data-ex="schulte">Schulte Tablosu</button>
       <button class="ex-tab-btn" data-ex="grow">Genişleyen Odak</button>
+      <button class="ex-tab-btn" data-ex="blok">Blok Görme</button>
     </div>
 
     <div class="ex-toolbar">
@@ -707,6 +728,60 @@
             <input type="range" id="growSpeed" min="2" max="10" step="0.5" value="4">
           </div>
           <button class="btn-primary" id="growPlayBtn">Başlat</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ex-panel" id="ex-blok">
+      <div class="ex-stage">
+        <div class="ex-instructions">
+          Ortadaki kırmızı noktaya sabit bak. Çevresinde kısa süreliğine beliren rakamları gözünü kaydırmadan algıla, akılda tut ve kutuya yaz.
+          <span class="badge practice">pratik egzersizi</span><br>
+          Üst üste doğru bildikçe rakamlar merkezden daha uzağa açılır; böylece tek bakışta kapsadığın alan zorlanır. <strong>Seviye</strong> kaç rakam gösterileceğini, <strong>kademe</strong> bunların merkeze uzaklığını belirler.
+        </div>
+        <div class="blok-stage" id="blokStage">
+          <div class="blok-fix" id="blokFix"></div>
+        </div>
+        <div class="blok-cevap" id="blokAnswer" style="display:none;">
+          <input type="text" id="blokInput" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="Gördüğün rakamlar">
+          <button class="btn-primary" id="blokCheck">Kontrol</button>
+        </div>
+        <div class="blok-sonuc" id="blokResult"></div>
+        <div class="ex-controls">
+          <div class="field">
+            <label>Yerleşim</label>
+            <select id="blokMod">
+              <option value="yatay">Yatay — noktanın iki yanı</option>
+              <option value="ikili">İkili blok — solda ve sağda ayrı sayılar</option>
+              <option value="dikey">Dikey — noktanın üstü ve altı</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Seviye (rakam) <span class="value" id="blokSeviyeValue">2</span></label>
+            <input type="range" id="blokSeviye" min="2" max="6" step="1" value="2">
+          </div>
+          <div class="field">
+            <label>Kademe (açıklık) <span class="value" id="blokKademeValue">1</span></label>
+            <input type="range" id="blokKademe" min="1" max="6" step="1" value="1">
+          </div>
+          <div class="field">
+            <label>Gösterim süresi <span class="value" id="blokSureValue">300</span> ms</label>
+            <input type="range" id="blokSure" min="80" max="1500" step="20" value="300">
+          </div>
+          <div class="field">
+            <label>Otomatik zorluk</label>
+            <select id="blokOto">
+              <option value="on" selected>Açık (başardıkça açılır)</option>
+              <option value="off">Kapalı (sabit kalır)</option>
+            </select>
+          </div>
+          <button class="btn-primary" id="blokPlayBtn">Başlat</button>
+        </div>
+        <div class="blok-skor">
+          <div class="stat"><div class="n" id="blokPuan">0</div><div class="l">puan</div></div>
+          <div class="stat"><div class="n" id="blokDogruluk">0/0</div><div class="l">doğru</div></div>
+          <div class="stat"><div class="n" id="blokSeri">0</div><div class="l">üst üste</div></div>
+          <div class="stat"><div class="n" id="blokRekor">0</div><div class="l">en iyi puan</div></div>
         </div>
       </div>
     </div>
@@ -2072,7 +2147,7 @@
       document.querySelectorAll('.ex-panel').forEach(p => p.classList.remove('active'));
       btn.classList.add('active');
       $('ex-' + btn.dataset.ex).classList.add('active');
-      dotStop(); flashStop(); growStop();
+      dotStop(); flashStop(); growStop(); blokStop();
     });
   });
 
@@ -2295,6 +2370,174 @@
   function growPlay() { growPlaying = true; growT0 = null; $('growPlayBtn').textContent = 'Durdur'; growRAF = requestAnimationFrame(growFrame); }
   function growStop() { growPlaying = false; $('growPlayBtn').textContent = 'Başlat'; if (growRAF) cancelAnimationFrame(growRAF); growRAF = null; }
   $('growPlayBtn').addEventListener('click', () => { growPlaying ? growStop() : growPlay(); });
+
+  /* --- blok görme: odak noktasının çevresinde beliren rakamları hatırlama ---
+     Üç yerleşim de aynı döngüyü paylaşır: hazırlan → kısa göster → gizle →
+     yazdır → puanla. Fark yalnızca rakamların konumu ve merkeze uzaklığı. */
+  const blokStage = $('blokStage'), blokInput = $('blokInput');
+  let blokPlaying = false, blokTimer = null, blokBeklenen = '';
+  let blokPuan = 0, blokDogru = 0, blokToplam = 0, blokSeri = 0, blokYanlisSeri = 0;
+  const K_BLOK = 'speedreader.blok.rekor';
+
+  function blokRekorlar() {
+    try { return JSON.parse(lsGet(K_BLOK) || '{}') || {}; } catch (e) { return {}; }
+  }
+  function blokRekorYaz(mod, puan) {
+    const hepsi = blokRekorlar();
+    if (!hepsi[mod] || puan > hepsi[mod]) { hepsi[mod] = puan; lsSet(K_BLOK, JSON.stringify(hepsi)); }
+  }
+  function blokSkorYaz() {
+    $('blokPuan').textContent = blokPuan;
+    $('blokDogruluk').textContent = blokDogru + '/' + blokToplam;
+    $('blokSeri').textContent = blokSeri;
+    $('blokRekor').textContent = blokRekorlar()[$('blokMod').value] || 0;
+  }
+
+  function blokTemizle() {
+    blokStage.querySelectorAll('.blok-digit').forEach(el => el.remove());
+  }
+
+  function blokUret() {
+    const seviye = parseInt($('blokSeviye').value, 10);
+    const rnd = n => Array.from({ length: n }, () => Math.floor(Math.random() * 10)).join('');
+    if ($('blokMod').value === 'ikili') {
+      const sol = rnd(seviye), sag = rnd(seviye);
+      return { beklenen: sol + sag, gruplar: [sol, sag] };
+    }
+    const hepsi = rnd(seviye);
+    const kes = Math.ceil(seviye / 2);
+    return { beklenen: hepsi, gruplar: [hepsi.slice(0, kes), hepsi.slice(kes)] };
+  }
+
+  function blokGoster(gruplar) {
+    blokTemizle();
+    const dikey = $('blokMod').value === 'dikey';
+    const w = blokStage.clientWidth, h = blokStage.clientHeight;
+    // açıklık alanın boyutuna oranlı: telefonda da büyük monitörde de anlamlı kalsın
+    const birim = Math.max(14, Math.min(w, h) * 0.06);
+    let acik = parseInt($('blokKademe').value, 10) * birim;
+
+    const els = gruplar.filter(Boolean).map(metin => {
+      const el = document.createElement('div');
+      el.className = 'blok-digit';
+      el.textContent = metin;
+      el.style.visibility = 'hidden';
+      blokStage.appendChild(el);
+      return el;
+    });
+    if (!els.length) return;
+
+    // Açıklık bu egzersizin asıl zorluk değişkeni olduğu için sığdırmak
+    // gerektiğinde önce yazıyı küçültüyoruz; açıklığı ancak son çare kısıyoruz.
+    const olc = el => (dikey ? el.offsetHeight : el.offsetWidth);
+    const yariAlan = (dikey ? h : w) / 2 - 8;
+    let enBuyuk = Math.max.apply(null, els.map(olc));
+    if (acik + enBuyuk > yariAlan) {
+      const temel = parseFloat(getComputedStyle(els[0]).fontSize);
+      const oran = Math.max(0.25, (yariAlan - acik) / enBuyuk);
+      els.forEach(el => { el.style.fontSize = Math.max(12, temel * oran) + 'px'; });
+      enBuyuk = Math.max.apply(null, els.map(olc));
+    }
+    if (acik + enBuyuk > yariAlan) acik = Math.max(birim, yariAlan - enBuyuk);
+
+    const yerlestir = (el, stil) => { Object.assign(el.style, stil); el.style.visibility = 'visible'; };
+    if (dikey) {
+      yerlestir(els[0], { left: '50%', top: (h / 2 - acik) + 'px', transform: 'translate(-50%, -100%)' });
+      if (els[1]) yerlestir(els[1], { left: '50%', top: (h / 2 + acik) + 'px', transform: 'translate(-50%, 0)' });
+    } else {
+      yerlestir(els[0], { left: (w / 2 - acik) + 'px', top: '50%', transform: 'translate(-100%, -50%)' });
+      if (els[1]) yerlestir(els[1], { left: (w / 2 + acik) + 'px', top: '50%', transform: 'translate(0, -50%)' });
+    }
+  }
+
+  function blokSonuc(metin, sinif) {
+    const el = $('blokResult');
+    el.textContent = metin;
+    el.className = 'blok-sonuc' + (sinif ? ' ' + sinif : '');
+  }
+
+  function blokTur() {
+    if (!blokPlaying) return;
+    blokTemizle();
+    $('blokAnswer').style.display = 'none';
+    blokSonuc('Noktaya bak…', '');
+    blokTimer = setTimeout(() => {
+      if (!blokPlaying) return;
+      const tur = blokUret();
+      blokBeklenen = tur.beklenen;
+      blokGoster(tur.gruplar);
+      blokTimer = setTimeout(() => {
+        if (!blokPlaying) return;
+        blokTemizle();
+        $('blokAnswer').style.display = 'flex';
+        blokSonuc('Gördüğün rakamları sırayla yaz', '');
+        blokInput.value = '';
+        blokInput.focus();
+      }, parseInt($('blokSure').value, 10));
+    }, 900);
+  }
+
+  function blokZorlukAyarla(dogruMu) {
+    if ($('blokOto').value !== 'on') return;
+    const kademe = $('blokKademe'), seviye = $('blokSeviye');
+    if (dogruMu && blokSeri > 0 && blokSeri % 3 === 0) {
+      if (+kademe.value < +kademe.max) kademe.value = +kademe.value + 1;
+      else if (+seviye.value < +seviye.max) { seviye.value = +seviye.value + 1; kademe.value = 1; }
+      kademe.dispatchEvent(new Event('input'));
+      seviye.dispatchEvent(new Event('input'));
+    } else if (!dogruMu && blokYanlisSeri >= 2) {
+      if (+kademe.value > +kademe.min) { kademe.value = +kademe.value - 1; kademe.dispatchEvent(new Event('input')); }
+      blokYanlisSeri = 0;
+    }
+  }
+
+  function blokKontrol() {
+    if (!blokPlaying || $('blokAnswer').style.display === 'none') return;
+    const cevap = (blokInput.value || '').replace(/\D/g, '');
+    if (!cevap) { blokInput.focus(); return; }
+    const dogruMu = cevap === blokBeklenen;
+    blokToplam++;
+    if (dogruMu) {
+      blokDogru++; blokSeri++; blokYanlisSeri = 0;
+      blokPuan += parseInt($('blokKademe').value, 10) * 10;
+      blokSonuc('Doğru: ' + blokBeklenen, 'dogru');
+    } else {
+      blokSeri = 0; blokYanlisSeri++;
+      blokPuan -= 5;
+      blokSonuc('Doğrusu ' + blokBeklenen + ' — sen ' + cevap + ' yazdın', 'yanlis');
+    }
+    blokZorlukAyarla(dogruMu);
+    blokRekorYaz($('blokMod').value, blokPuan);
+    blokSkorYaz();
+    $('blokAnswer').style.display = 'none';
+    blokTimer = setTimeout(blokTur, 1300);
+  }
+
+  function blokPlay() {
+    blokPlaying = true;
+    blokPuan = 0; blokDogru = 0; blokToplam = 0; blokSeri = 0; blokYanlisSeri = 0;
+    blokSkorYaz();
+    $('blokPlayBtn').textContent = 'Durdur';
+    blokTur();
+  }
+  function blokStop() {
+    blokPlaying = false;
+    clearTimeout(blokTimer);
+    blokTimer = null;
+    blokTemizle();
+    $('blokAnswer').style.display = 'none';
+    $('blokPlayBtn').textContent = 'Başlat';
+    blokSonuc('', '');
+  }
+
+  $('blokPlayBtn').addEventListener('click', () => { blokPlaying ? blokStop() : blokPlay(); });
+  $('blokCheck').addEventListener('click', blokKontrol);
+  blokInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); blokKontrol(); } });
+  $('blokSeviye').addEventListener('input', () => $('blokSeviyeValue').textContent = $('blokSeviye').value);
+  $('blokKademe').addEventListener('input', () => $('blokKademeValue').textContent = $('blokKademe').value);
+  $('blokSure').addEventListener('input', () => $('blokSureValue').textContent = $('blokSure').value);
+  $('blokMod').addEventListener('change', () => { blokStop(); blokSkorYaz(); });
+  blokSkorYaz();
 })();
 </script>
 </body>
