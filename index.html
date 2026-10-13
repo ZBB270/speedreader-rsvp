@@ -83,10 +83,10 @@
   .controls { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 2px 18px 18px; flex-wrap: wrap; }
   /* touch-action: mobil tarayıcılar aynı yere hızlı iki dokunuşu "yakınlaştır"
      sayar; hıza art arda basınca ekran büyüyordu. manipulation bu refleksi
-     kapatır, kaydırma ve parmakla yakınlaştırma çalışmaya devam eder. */
-  button, select, input[type="range"], input[type="number"], .tw, .seg, .sb-group, .prev-item, .schulte-cell, .main-tab-btn, .ex-tab-btn, .progress-bar, .display {
-    touch-action: manipulation;
-  }
+     kapatır, kaydırma ve parmakla yakınlaştırma çalışmaya devam eder.
+     touch-action kalıtsal değildir: dokunuş hangi öğede başlarsa onun değeri
+     geçerli olur, bu yüzden tek tek seçicilere değil tüm öğelere uygulanır. */
+  * { touch-action: manipulation; }
   button { border: none; border-radius: 10px; padding: 10px 18px; font-size: 14px; font-weight: 600; cursor: pointer; transition: transform 0.05s ease, background 0.15s ease; font-family: inherit; }
   button:active { transform: scale(0.96); }
   button:disabled { opacity: 0.45; cursor: default; }
@@ -220,7 +220,14 @@
   .schulte-cell { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; aspect-ratio: 1; cursor: pointer; user-select: none; }
   .schulte-cell.done { background: var(--hl); color: var(--accent-3); border-color: var(--accent-3); }
   .schulte-cell.wrong { border-color: var(--accent-2); }
-  .schulte-center-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent-2); margin: 0 auto 14px; }
+  /* sabit bakış noktası tablonun tam ortasında olmalı: egzersiz "merkeze bak,
+     çevresel görüşle bul" üzerine kurulu */
+  .schulte-wrap { position: relative; }
+  .schulte-center-dot {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 12px; height: 12px; border-radius: 50%; background: var(--accent-2);
+    pointer-events: none; z-index: 2; box-shadow: 0 0 0 3px var(--panel);
+  }
   .schulte-meta { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-top: 14px; }
   /* blok görme: rakamlar odak noktasına göre konumlanır */
   .blok-stage { height: var(--ex-h, 300px); background: var(--panel-2); border-radius: 12px; position: relative; overflow: hidden; }
@@ -230,13 +237,27 @@
     font-size: clamp(22px, calc(var(--ex-h, 300px) * 0.11), 72px);
     font-variant-numeric: tabular-nums;
   }
-  .blok-cevap { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
-  .blok-cevap input {
-    flex: 1; min-width: 140px; background: var(--panel-2); border: 1px solid var(--border);
-    color: var(--text); border-radius: 10px; padding: 12px; font-size: 20px; font-weight: 700;
-    letter-spacing: 0.15em; text-align: center; font-family: inherit;
+  /* Yerleşik tuş takımı: telefonun kendi klavyesi açılınca sayfa kayıyor ve
+     rakamların göründüğü alan ekranın dışında kalıyordu. Kendi tuşlarımızla
+     odaklanılacak bir alan olmadığı için kayma da olmuyor. */
+  .blok-cevap { margin-top: 12px; }
+  .blok-ekran {
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px;
+    min-height: 50px; display: flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 700; letter-spacing: 0.22em;
+    font-variant-numeric: tabular-nums; padding: 6px 10px;
   }
-  .blok-cevap input:focus { outline: 2px solid var(--accent); }
+  .blok-ekran:empty::before {
+    content: 'Gördüğün rakamlar'; color: var(--muted);
+    font-size: 14px; font-weight: 500; letter-spacing: normal;
+  }
+  .blok-tuslar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 8px; }
+  .blok-tuslar button {
+    padding: 14px 0; font-size: 18px; min-width: 0;
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+  }
+  .blok-tuslar button[data-k="ok"] { grid-column: span 4; background: var(--accent); color: #fff; border-color: var(--accent); }
+  .blok-tuslar button:disabled { opacity: 0.3; }
   .blok-sonuc { margin-top: 10px; font-size: 14px; font-weight: 600; min-height: 22px; }
   .blok-sonuc.dogru { color: var(--accent-3); }
   .blok-sonuc.yanlis { color: var(--accent-2); }
@@ -263,6 +284,20 @@
   .ex-stage:fullscreen { background: var(--bg); overflow-y: auto; padding: 28px; }
   .ex-stage:fullscreen .ex-track, .ex-stage:fullscreen .grow-stage { height: 70vh; }
   .ex-stage:fullscreen .flash-box { height: 60vh; }
+
+  /* iOS requestFullscreen desteklemiyor; aynı görünümü CSS ile veriyoruz */
+  .ex-stage.css-immersive {
+    position: fixed; inset: 0; z-index: 9999; margin: 0;
+    height: 100vh; height: 100dvh;
+    border-radius: 0; border: none; background: var(--bg);
+    overflow-y: auto; padding: 20px;
+    padding-top: calc(20px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+  }
+  .ex-stage.css-immersive .ex-track, .ex-stage.css-immersive .grow-stage, .ex-stage.css-immersive .blok-stage { height: 56vh; height: 56dvh; }
+  .ex-stage.css-immersive .flash-box { height: 50vh; height: 50dvh; }
+  .ex-stage.css-immersive .ex-instructions { display: none; }
 
   .badge { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.3px; padding: 2px 7px; border-radius: 20px; margin-left: 6px; vertical-align: middle; }
   .badge.clinical { background: rgba(53,196,138,0.18); color: var(--accent-3); border: 1px solid var(--accent-3); }
@@ -330,7 +365,7 @@
 <div class="wrap">
   <div class="title-row">
     <h1>Hızlı Okuma</h1>
-    <span class="version-badge">8.2</span>
+    <span class="version-badge">8.3</span>
   </div>
   <div class="subtitle">Kitaplığından seç, kaldığın yerden devam et, gösterimi kendine göre ayarla.</div>
 
@@ -686,8 +721,10 @@
     <div class="ex-panel" id="ex-schulte">
       <div class="ex-stage">
         <div class="ex-instructions">Gözünü tablonun ortasında tutmaya çalışarak 1'den başlayıp sırayla tüm sayıları bul ve tıkla. <span class="badge practice">dikkat / görsel arama oyunu</span><br>Süreni kendi geçmişinle karşılaştır. Not: Bu tablonun "görüş açısını genişlettiği" ya da dikkati kalıcı olarak artırdığı yönündeki yaygın iddiaların güvenilir hakemli kaynağı yoktur; gelişme çoğunlukla bu görevin kendisinde kalır.</div>
-        <div class="schulte-center-dot"></div>
-        <div class="schulte-grid" id="schulteGrid"></div>
+        <div class="schulte-wrap">
+          <div class="schulte-grid" id="schulteGrid"></div>
+          <div class="schulte-center-dot"></div>
+        </div>
         <div class="schulte-meta">
           <span id="schulteStatus">Başlamak için 1'e tıkla</span>
           <span id="schulteTimer">00.0 sn</span>
@@ -742,11 +779,24 @@
         <div class="blok-stage" id="blokStage">
           <div class="blok-fix" id="blokFix"></div>
         </div>
-        <div class="blok-cevap" id="blokAnswer" style="display:none;">
-          <input type="text" id="blokInput" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="Gördüğün rakamlar">
-          <button class="btn-primary" id="blokCheck">Kontrol</button>
-        </div>
         <div class="blok-sonuc" id="blokResult"></div>
+        <div class="blok-cevap" id="blokAnswer">
+          <div class="blok-ekran" id="blokEkran"></div>
+          <div class="blok-tuslar" id="blokTuslar">
+            <button type="button" data-k="1">1</button>
+            <button type="button" data-k="2">2</button>
+            <button type="button" data-k="3">3</button>
+            <button type="button" data-k="4">4</button>
+            <button type="button" data-k="5">5</button>
+            <button type="button" data-k="6">6</button>
+            <button type="button" data-k="7">7</button>
+            <button type="button" data-k="8">8</button>
+            <button type="button" data-k="9">9</button>
+            <button type="button" data-k="0">0</button>
+            <button type="button" data-k="sil" title="Sil">⌫</button>
+            <button type="button" data-k="ok">Kontrol</button>
+          </div>
+        </div>
         <div class="ex-controls">
           <div class="field">
             <label>Yerleşim</label>
@@ -766,7 +816,7 @@
           </div>
           <div class="field">
             <label>Gösterim süresi <span class="value" id="blokSureValue">300</span> ms</label>
-            <input type="range" id="blokSure" min="80" max="1500" step="20" value="300">
+            <input type="range" id="blokSure" min="80" max="1000" step="20" value="300">
           </div>
           <div class="field">
             <label>Otomatik zorluk</label>
@@ -774,6 +824,7 @@
               <option value="on" selected>Açık (başardıkça açılır)</option>
               <option value="off">Kapalı (sabit kalır)</option>
             </select>
+            <div class="hint" id="blokOtoNot" style="margin-top:6px"></div>
           </div>
           <button class="btn-primary" id="blokPlayBtn">Başlat</button>
         </div>
@@ -2158,10 +2209,40 @@
     $('exSizeValue').textContent = el.value;
   }
   $('exSize').addEventListener('input', () => { applyExSize(); saveSoon(); });
+  let exCssTamEkran = null;
+  function exTamEkranKapat() {
+    if (document.fullscreenElement && document.exitFullscreen) Promise.resolve(document.exitFullscreen()).catch(() => {});
+    if (exCssTamEkran) {
+      exCssTamEkran.classList.remove('css-immersive');
+      document.body.classList.remove('immersive-open');
+      exCssTamEkran = null;
+    }
+    $('exFsBtn').textContent = '⛶ Egzersizi tam ekran yap';
+  }
+  function exTamEkranAc(panel) {
+    const ac = () => {
+      exCssTamEkran = panel;
+      panel.classList.add('css-immersive');
+      document.body.classList.add('immersive-open');
+      $('exFsBtn').textContent = '✕ Tam ekrandan çık';
+    };
+    // gerçek tam ekranı dene; iOS desteklemiyorsa CSS moduna düş
+    if (panel.requestFullscreen) {
+      Promise.resolve(panel.requestFullscreen())
+        .then(() => { $('exFsBtn').textContent = '✕ Tam ekrandan çık'; })
+        .catch(ac);
+    } else ac();
+  }
   $('exFsBtn').addEventListener('click', () => {
-    if (document.fullscreenElement) { document.exitFullscreen(); return; }
+    if (document.fullscreenElement || exCssTamEkran) { exTamEkranKapat(); return; }
     const panel = document.querySelector('.ex-panel.active .ex-stage');
-    if (panel && panel.requestFullscreen) Promise.resolve(panel.requestFullscreen()).catch(() => {});
+    if (panel) exTamEkranAc(panel);
+  });
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && !exCssTamEkran) $('exFsBtn').textContent = '⛶ Egzersizi tam ekran yap';
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && exCssTamEkran) { e.preventDefault(); exTamEkranKapat(); }
   });
 
   /* --- nokta takibi --- */
@@ -2374,8 +2455,9 @@
   /* --- blok görme: odak noktasının çevresinde beliren rakamları hatırlama ---
      Üç yerleşim de aynı döngüyü paylaşır: hazırlan → kısa göster → gizle →
      yazdır → puanla. Fark yalnızca rakamların konumu ve merkeze uzaklığı. */
-  const blokStage = $('blokStage'), blokInput = $('blokInput');
-  let blokPlaying = false, blokTimer = null, blokBeklenen = '';
+  const blokStage = $('blokStage'), blokEkran = $('blokEkran');
+  let blokPlaying = false, blokTimer = null, blokBeklenen = '', blokDeger = '';
+  let blokCevapAcik = false;
   let blokPuan = 0, blokDogru = 0, blokToplam = 0, blokSeri = 0, blokYanlisSeri = 0;
   const K_BLOK = 'speedreader.blok.rekor';
 
@@ -2456,11 +2538,24 @@
     el.className = 'blok-sonuc' + (sinif ? ' ' + sinif : '');
   }
 
+  function blokTuslarAktif(aktif) {
+    blokCevapAcik = aktif;
+    $('blokTuslar').querySelectorAll('button').forEach(b => { b.disabled = !aktif; });
+  }
+  function blokDegerYaz(v) {
+    blokDeger = v;
+    blokEkran.textContent = v;
+  }
+  function blokDurum() {
+    return 'Seviye ' + $('blokSeviye').value + ' · Kademe ' + $('blokKademe').value;
+  }
+
   function blokTur() {
     if (!blokPlaying) return;
     blokTemizle();
-    $('blokAnswer').style.display = 'none';
-    blokSonuc('Noktaya bak…', '');
+    blokTuslarAktif(false);
+    blokDegerYaz('');
+    blokSonuc('Noktaya bak… (' + blokDurum() + ')', '');
     blokTimer = setTimeout(() => {
       if (!blokPlaying) return;
       const tur = blokUret();
@@ -2469,53 +2564,79 @@
       blokTimer = setTimeout(() => {
         if (!blokPlaying) return;
         blokTemizle();
-        $('blokAnswer').style.display = 'flex';
+        blokTuslarAktif(true);
         blokSonuc('Gördüğün rakamları sırayla yaz', '');
-        blokInput.value = '';
-        blokInput.focus();
       }, parseInt($('blokSure').value, 10));
     }, 900);
   }
 
   function blokZorlukAyarla(dogruMu) {
-    if ($('blokOto').value !== 'on') return;
+    if ($('blokOto').value !== 'on') return '';
     const kademe = $('blokKademe'), seviye = $('blokSeviye');
+    let mesaj = '';
     if (dogruMu && blokSeri > 0 && blokSeri % 3 === 0) {
-      if (+kademe.value < +kademe.max) kademe.value = +kademe.value + 1;
-      else if (+seviye.value < +seviye.max) { seviye.value = +seviye.value + 1; kademe.value = 1; }
+      if (+kademe.value < +kademe.max) {
+        kademe.value = +kademe.value + 1;
+        mesaj = ' → Kademe ' + kademe.value + ', rakamlar açılıyor';
+      } else if (+seviye.value < +seviye.max) {
+        seviye.value = +seviye.value + 1;
+        kademe.value = 1;
+        mesaj = ' → Seviye ' + seviye.value + ', rakam sayısı arttı';
+      }
       kademe.dispatchEvent(new Event('input'));
       seviye.dispatchEvent(new Event('input'));
     } else if (!dogruMu && blokYanlisSeri >= 2) {
-      if (+kademe.value > +kademe.min) { kademe.value = +kademe.value - 1; kademe.dispatchEvent(new Event('input')); }
+      if (+kademe.value > +kademe.min) {
+        kademe.value = +kademe.value - 1;
+        kademe.dispatchEvent(new Event('input'));
+        mesaj = ' → Kademe ' + kademe.value + ', biraz kolaylaştı';
+      }
       blokYanlisSeri = 0;
     }
+    return mesaj;
   }
 
   function blokKontrol() {
-    if (!blokPlaying || $('blokAnswer').style.display === 'none') return;
-    const cevap = (blokInput.value || '').replace(/\D/g, '');
-    if (!cevap) { blokInput.focus(); return; }
+    if (!blokPlaying || !blokCevapAcik || !blokDeger) return;
+    const cevap = blokDeger;
     const dogruMu = cevap === blokBeklenen;
     blokToplam++;
+    blokTuslarAktif(false);
     if (dogruMu) {
       blokDogru++; blokSeri++; blokYanlisSeri = 0;
       blokPuan += parseInt($('blokKademe').value, 10) * 10;
-      blokSonuc('Doğru: ' + blokBeklenen, 'dogru');
     } else {
       blokSeri = 0; blokYanlisSeri++;
       blokPuan -= 5;
-      blokSonuc('Doğrusu ' + blokBeklenen + ' — sen ' + cevap + ' yazdın', 'yanlis');
     }
-    blokZorlukAyarla(dogruMu);
+    const yukseldi = blokZorlukAyarla(dogruMu);
+    blokSonuc(dogruMu
+      ? 'Doğru: ' + blokBeklenen + yukseldi
+      : 'Doğrusu ' + blokBeklenen + ' — sen ' + cevap + ' yazdın' + yukseldi,
+      dogruMu ? 'dogru' : 'yanlis');
     blokRekorYaz($('blokMod').value, blokPuan);
     blokSkorYaz();
-    $('blokAnswer').style.display = 'none';
-    blokTimer = setTimeout(blokTur, 1300);
+    blokTimer = setTimeout(blokTur, 1400);
+  }
+
+  // Otomatik modda kullanıcı hiçbir şey ayarlamadan en kolaydan başlayıp
+  // ilerlesin; bu yüzden seviye/kademe kilitlenir ve başlangıçta sıfırlanır.
+  function blokOtoUygula() {
+    const oto = $('blokOto').value === 'on';
+    $('blokSeviye').disabled = oto;
+    $('blokKademe').disabled = oto;
+    $('blokOtoNot').textContent = oto
+      ? 'Otomatik modda seviye ve kademe kendiliğinden ayarlanır; en kolaydan başlar.'
+      : 'Seviye ve kademeyi kendin ayarlıyorsun.';
   }
 
   function blokPlay() {
     blokPlaying = true;
     blokPuan = 0; blokDogru = 0; blokToplam = 0; blokSeri = 0; blokYanlisSeri = 0;
+    if ($('blokOto').value === 'on') {
+      $('blokSeviye').value = 2; $('blokSeviye').dispatchEvent(new Event('input'));
+      $('blokKademe').value = 1; $('blokKademe').dispatchEvent(new Event('input'));
+    }
     blokSkorYaz();
     $('blokPlayBtn').textContent = 'Durdur';
     blokTur();
@@ -2525,18 +2646,35 @@
     clearTimeout(blokTimer);
     blokTimer = null;
     blokTemizle();
-    $('blokAnswer').style.display = 'none';
+    blokTuslarAktif(false);
+    blokDegerYaz('');
     $('blokPlayBtn').textContent = 'Başlat';
     blokSonuc('', '');
   }
 
+  $('blokTuslar').addEventListener('click', e => {
+    const tus = e.target.closest('button');
+    if (!tus || !blokCevapAcik) return;
+    const k = tus.dataset.k;
+    if (k === 'ok') blokKontrol();
+    else if (k === 'sil') blokDegerYaz(blokDeger.slice(0, -1));
+    else if (blokDeger.length < 12) blokDegerYaz(blokDeger + k);
+  });
+  // masaüstünde fiziksel klavye de çalışsın
+  document.addEventListener('keydown', e => {
+    if (!blokCevapAcik || !$('ex-blok').classList.contains('active')) return;
+    if (/^[0-9]$/.test(e.key)) { e.preventDefault(); if (blokDeger.length < 12) blokDegerYaz(blokDeger + e.key); }
+    else if (e.key === 'Backspace') { e.preventDefault(); blokDegerYaz(blokDeger.slice(0, -1)); }
+    else if (e.key === 'Enter') { e.preventDefault(); blokKontrol(); }
+  });
   $('blokPlayBtn').addEventListener('click', () => { blokPlaying ? blokStop() : blokPlay(); });
-  $('blokCheck').addEventListener('click', blokKontrol);
-  blokInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); blokKontrol(); } });
   $('blokSeviye').addEventListener('input', () => $('blokSeviyeValue').textContent = $('blokSeviye').value);
   $('blokKademe').addEventListener('input', () => $('blokKademeValue').textContent = $('blokKademe').value);
   $('blokSure').addEventListener('input', () => $('blokSureValue').textContent = $('blokSure').value);
   $('blokMod').addEventListener('change', () => { blokStop(); blokSkorYaz(); });
+  $('blokOto').addEventListener('change', () => { blokStop(); blokOtoUygula(); });
+  blokOtoUygula();
+  blokTuslarAktif(false);
   blokSkorYaz();
 })();
 </script>

@@ -35,7 +35,7 @@ HTML dosyasını indirip çift tıklaman yeterli — sunucu, kurulum veya intern
 - Şimşek kelime (takistoskop)
 - Schulte tablosu (3x3 – 6x6)
 - Genişleyen odak
-- Blok görme: odak noktasının çevresinde kısa süre beliren rakamları hatırlama — yatay, ikili blok ve dikey yerleşimlerle; seviye (rakam sayısı) ve kademe (merkeze uzaklık) ayrı zorluk eksenleri, başardıkça otomatik açılır, puan ve rekor takibi
+- Blok görme: odak noktasının çevresinde kısa süre beliren rakamları hatırlama — yatay, ikili blok ve dikey yerleşimlerle; seviye (rakam sayısı) ve kademe (merkeze uzaklık) ayrı zorluk eksenleri, otomatik modda en kolaydan başlayıp kendiliğinden açılır, puan ve rekor takibi. Cevap için yerleşik tuş takımı kullanılır (telefon klavyesi açılıp ekranı kaydırmasın diye)
 - Çalışma alanı boyutu ayarlanabilir, egzersizler ayrı ayrı tam ekran yapılabilir
 
 **Bilimsel temel sekmesi**
