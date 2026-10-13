@@ -65,6 +65,7 @@ Her yenilik, öncekinin üzerine yazılmadan yeni bir sürüm dosyası olarak ek
 | `speedreader-v5.html` | Tam ekran ayar çubuğu, sıçrama modlu nokta takibi, ölçeklenebilir egzersiz alanı, önizleme modu, bilimsel temel sekmesi |
 | `speedreader-v6.html` | EPUB desteği, cihazlar arası yedek al/yükle, telefon düzeni, taşan kelimelerde otomatik yazı küçültme |
 | `speedreader-v7.html` | iOS'ta da çalışan tam ekran modu, CDN kütüphaneleri için bütünlük doğrulaması (SRI) |
+| `speedreader-v8.html` | Kütüphaneler depoya taşındı (dış bağlantı yok), çevrimdışı çalışma, telefona kurulabilir uygulama |
 
 En güncel sürüm en yüksek numaralı dosyadır. `index.html` otomatik olarak en günceline yönlendirir.
 
@@ -84,11 +85,20 @@ Kitap metni, kaldığın yer, yer imleri ve ayarlar birlikte taşınır; kitap k
 
 Tam ekran modu v7'den itibaren iOS'ta da çalışır: iOS Safari (ve onun motorunu kullanan iOS Chrome) `requestFullscreen` API'sini desteklemediği için uygulama otomatik olarak CSS tabanlı bir tam ekran moduna geçer. Çıkmak için aynı düğmeye bas ya da `Esc`.
 
+### Telefona kurma ve çevrimdışı okuma
+
+v8'den itibaren uygulama cihaza kurulabilir ve internetsiz çalışır:
+
+- **Android / Chrome:** Adresi aç → menü → *Uygulamayı yükle* (ya da *Ana ekrana ekle*)
+- **iPhone / Safari:** Adresi aç → paylaş düğmesi → *Ana Ekrana Ekle*
+
+Kurduktan sonra uygulama kendi simgesiyle, tarayıcı çubukları olmadan açılır. İlk açılışta dosyalar cihaza kaydedilir; sonrasında internet olmadan da çalışır — metroda veya uçakta okuyabilirsin. Kitapların zaten cihazda saklandığı için çevrimdışıyken de kaldığın yerden devam edersin.
+
 ## Güvenlik ve gizlilik
 
 - **Veri cihazdan çıkmaz.** Sunucu, hesap, analitik veya takip kodu yok. Aktardığın kitaplar ve okuma konumun yalnızca kendi tarayıcının deposunda (localStorage / IndexedDB) tutulur; hiçbir yere gönderilmez.
 - **Dosyalar yerelde işlenir.** PDF, EPUB ve DOCX dosyaları tarayıcının içinde ayrıştırılır, yüklenmez.
-- **CDN bütünlük doğrulaması (SRI).** Uygulamanın kullandığı üç kütüphane cdnjs'ten gelir. v7'den itibaren her biri `integrity` parmak iziyle sabitlenmiştir: CDN'den gelen dosya birebir eşleşmezse tarayıcı çalıştırmaz. Bu, CDN'in ele geçirilmesi durumunda kod enjeksiyonunu engeller.
+- **Dış sunucuya hiç bağlanmaz.** v8'den itibaren kütüphaneler `lib/` klasöründen yüklenir; uygulama çalışırken hiçbir üçüncü taraf isteği yapılmaz, IP adresin kimseye gitmez. (Dosyalar cdnjs'ten indirilip SHA-512 imzalarıyla doğrulanmıştır; v7 bunları CDN'den `integrity` parmak iziyle çekiyordu.)
 - **Metin güvenli şekilde işlenir.** İçe aktarılan belgelerdeki HTML kaçırılır (escape), EPUB içindeki `script` ve `style` etiketleri ayrıştırma sırasında silinir; belge içeriği hiçbir zaman çalıştırılabilir kod olarak sayfaya yazılmaz.
 - **Depo herkese açıktır**, ancak okuma verilerin depoda değildir — yalnızca uygulama kodu yayınlanmıştır.
 
@@ -112,6 +122,12 @@ Bilimsel temel sekmesindeki değerlendirmeler şu kaynaklara dayanır:
 - Schotter, Tran & Rayner (2014), [hızlı okuma uygulamaları ve geri dönüş engeli](https://today.ucsd.edu/story/dont_believe_what_you_read_only_once_speed_reading_apps_may_impair_reading)
 - [National Eye Institute — Convergence Insufficiency Treatment Trial](https://www.nei.nih.gov/research-and-training/research-news/more-effective-treatment-identified-common-childhood-vision-disorder)
 - [Cochrane derlemesi — yakınsama yetmezliği tedavileri](https://www.cochrane.org/evidence/CD006768_how-do-different-treatments-vision-disorder-convergence-insufficiency-compare-effectiveness)
+
+## Lisans
+
+Bu uygulama [MIT lisansı](LICENSE) ile yayınlanmıştır: kullanabilir, değiştirebilir, dağıtabilirsin; tek şart telif notunun korunması.
+
+`lib/` klasöründeki üçüncü taraf kütüphaneler kendi lisanslarına tabidir (pdf.js: Apache-2.0, mammoth.js: BSD-2-Clause, JSZip: MIT/GPLv3).
 
 ## Not
 

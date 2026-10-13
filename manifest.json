@@ -1,0 +1,17 @@
+{
+  "name": "Hızlı Okuma",
+  "short_name": "Hızlı Okuma",
+  "description": "RSVP yöntemiyle hızlı okuma uygulaması: kitaplarını aktar, kaldığın yerden devam et.",
+  "start_url": "./speedreader-v8.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1b1e26",
+  "theme_color": "#1b1e26",
+  "lang": "tr",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

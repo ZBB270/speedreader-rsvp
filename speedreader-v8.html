@@ -1,0 +1,2236 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Hızlı Okuma</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1b1e26">
+<meta name="description" content="RSVP yöntemiyle hızlı okuma uygulaması: kitaplarını aktar, kaldığın yerden devam et.">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  :root, :root[data-theme="dark"] {
+    --bg: #1b1e26; --panel: #242833; --panel-2: #2c313f; --hover: #343a49;
+    --accent: #4f8cff; --accent-2: #ff5a5a; --accent-3: #35c48a;
+    --text: #eef1f7; --muted: #8b93a7; --border: #383e4d; --hl: rgba(79,140,255,0.22);
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f6fa; --panel: #fff; --panel-2: #eef1f7; --hover: #e2e7f0;
+    --accent: #2f6fe4; --accent-2: #d93a3a; --accent-3: #1f9d6b;
+    --text: #1b1e26; --muted: #697189; --border: #d8dde8; --hl: rgba(47,111,228,0.18);
+  }
+  :root[data-theme="sepia"] {
+    --bg: #f1e7d6; --panel: #faf3e6; --panel-2: #eee1ca; --hover: #e5d6ba;
+    --accent: #9a6a2f; --accent-2: #b5452f; --accent-3: #5f7d3a;
+    --text: #3b3228; --muted: #8a7b63; --border: #ddcfb4; --hl: rgba(154,106,47,0.2);
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 24px 16px 60px; }
+  .title-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  h1 { font-size: 22px; font-weight: 600; margin: 0; }
+  .version-badge { background: var(--panel-2); border: 1px solid var(--border); color: var(--accent); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+  .subtitle { color: var(--muted); font-size: 13px; margin: 4px 0 16px; }
+
+  .main-tabs { display: flex; gap: 8px; margin-bottom: 18px; border-bottom: 1px solid var(--border); }
+  .main-tab-btn { background: none; border: none; color: var(--muted); font-size: 14px; font-weight: 600; padding: 10px 6px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .main-tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; background: var(--panel); border: 1px solid var(--accent); border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; font-size: 13px; }
+  .banner-actions { display: flex; gap: 8px; }
+
+  .stage { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 16px; }
+  .display { height: 220px; position: relative; overflow: hidden; cursor: pointer; background: radial-gradient(ellipse at center, var(--hl), transparent 72%); }
+  .display .guide-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--border); }
+  .guide-left { left: 50%; margin-left: -70px; }
+  .guide-right { left: 50%; margin-left: 70px; }
+  .focus-line { position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: var(--accent-2); opacity: 0; transition: opacity 0.2s; }
+  .display.show-anchor .focus-line { opacity: 0.35; }
+
+  .word { position: absolute; left: 50%; top: 50%; font-size: 46px; font-weight: 600; letter-spacing: 0.5px; white-space: pre; text-align: center; }
+  .word .orp { color: inherit; }
+  .display.orp-on .word .orp { color: var(--accent-2); }
+  .placeholder { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: var(--muted); font-size: 15px; text-align: center; width: 90%; }
+
+  .progress-row { padding: 10px 18px 14px; }
+  .progress-bar { height: 8px; background: var(--panel-2); border-radius: 4px; cursor: pointer; position: relative; overflow: hidden; }
+  .progress-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: var(--accent); border-radius: 4px; }
+  .progress-marks { position: absolute; left: 0; right: 0; top: 0; bottom: 0; pointer-events: none; }
+  .progress-mark { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--accent-3); }
+  .progress-meta { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  .controls { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 2px 18px 18px; flex-wrap: wrap; }
+  button { border: none; border-radius: 10px; padding: 10px 18px; font-size: 14px; font-weight: 600; cursor: pointer; transition: transform 0.05s ease, background 0.15s ease; font-family: inherit; }
+  button:active { transform: scale(0.96); }
+  button:disabled { opacity: 0.45; cursor: default; }
+  .btn-primary { background: var(--accent); color: #fff; min-width: 110px; }
+  .btn-secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover:not(:disabled) { background: var(--hover); }
+  .btn-small { padding: 7px 12px; font-size: 12px; min-width: 0; }
+
+  .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 760px) { .panels { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; }
+  .panel.span2 { grid-column: 1 / -1; }
+  /* Izgara/esnek öğeler varsayılan min-width:auto ile içeriklerinin min-content
+     genişliğinden daha dar olmayı reddeder; tek bir uzun satır tüm sütunu
+     şişirip sayfayı yatay kaydırılabilir hale getiriyordu. */
+  .panels, .panel, .grid4, .grid4 > .field, .row2 > .field, .stat-grid, .lib-item, .bm-item { min-width: 0; }
+  .panel h2 { font-size: 13px; font-weight: 600; margin: 0 0 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+
+  textarea { width: 100%; min-height: 150px; resize: vertical; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); padding: 12px; font-size: 14px; line-height: 1.5; font-family: inherit; }
+  textarea:focus { outline: 2px solid var(--accent); }
+
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--text); margin-bottom: 6px; }
+  .field label span.value { color: var(--accent); font-weight: 600; }
+  input[type="range"] { width: 100%; accent-color: var(--accent); }
+  select, input[type="number"] { width: 100%; background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 8px; font-size: 13px; font-family: inherit; }
+  .row2 { display: flex; gap: 12px; }
+  .row2 .field { flex: 1; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  @media (max-width: 760px) { .grid4 { grid-template-columns: 1fr 1fr; } }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 4px; }
+  .stat { background: var(--panel-2); border-radius: 10px; padding: 10px; text-align: center; }
+  .stat .n { font-size: 18px; font-weight: 700; }
+  .stat .l { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .hint { font-size: 12px; color: var(--muted); margin-top: 10px; line-height: 1.7; }
+  kbd { background: var(--panel-2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; font-size: 11px; }
+
+  .import-zone { border: 1.5px dashed var(--border); border-radius: 10px; padding: 14px; text-align: center; color: var(--muted); font-size: 13px; margin-bottom: 10px; cursor: pointer; transition: border-color 0.15s ease, background 0.15s ease; }
+  .import-zone.drag { border-color: var(--accent); background: var(--hl); color: var(--text); }
+  .import-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .import-status { font-size: 12px; min-height: 16px; margin-bottom: 8px; }
+  .import-status.ok { color: var(--accent-3); }
+  .import-status.err { color: var(--accent-2); }
+  .import-status.busy { color: var(--accent); }
+
+  .seg { display: inline-flex; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .seg button { background: none; border: none; color: var(--muted); padding: 6px 12px; font-size: 12px; border-radius: 0; }
+  .seg button.active { background: var(--accent); color: #fff; }
+
+  .follow-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+  .follow-box { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; height: 210px; overflow-y: auto; font-size: 14px; line-height: 1.9; }
+  .tw { border-radius: 3px; cursor: pointer; }
+  .tw:hover { background: var(--hover); }
+  .tw.read { color: var(--muted); }
+  .tw.cur { background: var(--accent); color: #fff; }
+  .tw.mark { box-shadow: inset 0 -2px 0 var(--accent-3); }
+  .detached-note { color: var(--accent-2); font-size: 12px; }
+
+  .bm-list { margin-top: 10px; max-height: 110px; overflow-y: auto; }
+  .bm-item, .lib-item { display: flex; align-items: center; gap: 8px; justify-content: space-between; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; font-size: 12px; margin-bottom: 6px; }
+  .bm-item span.t, .lib-item span.t { cursor: pointer; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bm-item button, .lib-item button { background: none; border: none; color: var(--muted); padding: 0 4px; font-size: 14px; }
+  .lib-item .pct { color: var(--accent); font-weight: 700; }
+  .lib-item.current { border-color: var(--accent); }
+  .empty-note { font-size: 12px; color: var(--muted); }
+  .lib-list { max-height: 200px; overflow-y: auto; }
+
+  .chart { display: flex; align-items: flex-end; gap: 6px; height: 90px; margin-top: 12px; }
+  .chart .bar-wrap { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; height: 100%; }
+  .chart .bar { width: 100%; background: var(--accent); border-radius: 4px 4px 0 0; min-height: 2px; }
+  .chart .bar.today { background: var(--accent-3); }
+  .chart .lbl { font-size: 10px; color: var(--muted); }
+  .goal-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: 13px; }
+  .goal-bar { flex: 1; height: 8px; background: var(--panel-2); border-radius: 4px; overflow: hidden; }
+  .goal-fill { height: 100%; width: 0%; background: var(--accent-3); }
+
+  .quiz-q { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+  .quiz-text { font-size: 14px; line-height: 1.7; margin-bottom: 10px; }
+  .quiz-blank { color: var(--accent); font-weight: 700; }
+  .quiz-opts { display: flex; gap: 8px; flex-wrap: wrap; }
+  .quiz-opt { background: var(--panel); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; }
+  .quiz-opt.correct { background: var(--accent-3); color: #fff; border-color: var(--accent-3); }
+  .quiz-opt.wrong { background: var(--accent-2); color: #fff; border-color: var(--accent-2); }
+  .quiz-score { font-size: 14px; font-weight: 700; margin-top: 8px; }
+
+  .stage:fullscreen { background: var(--bg); display: flex; flex-direction: column; justify-content: center; border-radius: 0; border: none; }
+  /* !important: alan yüksekliği kaydırıcısı satır içi stil yazıyor, tam ekranda
+     onu ezmemiz gerekiyor; yoksa okuma alanı küçük bir şerit olarak kalıyor. */
+  .stage:fullscreen .display { height: 62vh !important; }
+  .stage:fullscreen .progress-row { padding: 10px 40px; }
+  .stage:fullscreen .controls { padding-bottom: 28px; }
+
+  /* iOS Safari (ve onun motorunu kullanan iOS Chrome) Element.requestFullscreen
+     desteklemez. Bu mod tarayıcı API'si olmadan, sadece CSS ile tam ekran verir. */
+  .stage.css-immersive {
+    position: fixed; inset: 0; z-index: 9999; margin: 0;
+    height: 100vh; height: 100dvh;
+    border-radius: 0; border: none; background: var(--bg);
+    display: flex; flex-direction: column; justify-content: center;
+    overflow-y: auto;
+  }
+  .stage.css-immersive .display { height: 56vh !important; height: 56dvh !important; }
+  .stage.css-immersive .progress-row { padding: 10px 20px; }
+  .stage.css-immersive .controls { padding-bottom: 20px; }
+  body.immersive-open { overflow: hidden; }
+
+  .ex-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .ex-tab-btn { background: var(--panel-2); border: 1px solid var(--border); color: var(--muted); padding: 8px 14px; border-radius: 20px; font-size: 13px; cursor: pointer; }
+  .ex-tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .ex-panel { display: none; }
+  .ex-panel.active { display: block; }
+  .ex-stage { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 14px; }
+  .ex-instructions { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 14px; }
+  .ex-track { position: relative; height: var(--ex-h, 300px); background: var(--panel-2); border-radius: 12px; overflow: hidden; }
+  /* keskin nokta: parlama yerine ince halka — yüksek hızda iz/bulanıklık bırakmaz */
+  .ex-dot { position: absolute; width: var(--dot-size, 22px); height: var(--dot-size, 22px); border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); outline: 2px solid var(--accent); top: 50%; left: 50%; transform: translate(-50%, -50%); }
+  .ex-dot.landed { animation: sacLand 140ms ease-out; }
+  @keyframes sacLand { from { transform: translate(-50%, -50%) scale(1.6); } to { transform: translate(-50%, -50%) scale(1); } }
+  .speed-note { font-size: 12px; margin-top: 10px; color: var(--muted); }
+  .speed-note.warn { color: var(--accent-2); }
+  .ex-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
+  .ex-controls .field { flex: 1; min-width: 160px; margin-bottom: 0; }
+  .flash-box { height: calc(var(--ex-h, 300px) * 0.75); display: flex; align-items: center; justify-content: center; background: var(--panel-2); border-radius: 12px; font-weight: 700; font-size: clamp(28px, calc(var(--ex-h, 300px) * 0.14), 110px); }
+  .schulte-grid { display: grid; gap: 6px; max-width: calc(var(--ex-h, 300px) * 1.25); margin: 0 auto; }
+  .schulte-cell { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; aspect-ratio: 1; cursor: pointer; user-select: none; }
+  .schulte-cell.done { background: var(--hl); color: var(--accent-3); border-color: var(--accent-3); }
+  .schulte-cell.wrong { border-color: var(--accent-2); }
+  .schulte-center-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent-2); margin: 0 auto 14px; }
+  .schulte-meta { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-top: 14px; }
+  .grow-stage { height: var(--ex-h, 300px); background: var(--panel-2); border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+  .grow-fixation { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2); z-index: 2; }
+  .grow-shape { border: 2px solid var(--accent); background: var(--hl); width: 10px; height: 10px; }
+  .grow-shape.circle { border-radius: 50%; }
+  .grow-shape.square, .grow-shape.rect { border-radius: 6px; }
+
+  /* tam ekranda da erişilebilen hızlı ayar çubuğu */
+  .stage-bar { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; padding: 0 18px 16px; }
+  .sb-group { display: flex; align-items: center; gap: 6px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 4px 8px; font-size: 12px; color: var(--muted); }
+  .sb-group b { color: var(--text); min-width: 36px; text-align: center; font-size: 13px; }
+  .sb-group button { padding: 3px 9px; font-size: 14px; background: var(--panel); border: 1px solid var(--border); color: var(--text); border-radius: 6px; min-width: 0; }
+  .sb-group select { width: auto; padding: 3px 6px; font-size: 12px; }
+  .stage-bar, .controls { transition: opacity 0.35s; }
+  .stage:fullscreen.idle .stage-bar, .stage:fullscreen.idle .controls, .stage:fullscreen.idle .progress-row,
+  .stage.css-immersive.idle .stage-bar, .stage.css-immersive.idle .controls, .stage.css-immersive.idle .progress-row { opacity: 0; }
+
+  .ex-toolbar { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 12px 16px; margin-bottom: 14px; }
+  .ex-toolbar .field { flex: 1; min-width: 200px; margin-bottom: 0; }
+  .ex-stage:fullscreen { background: var(--bg); overflow-y: auto; padding: 28px; }
+  .ex-stage:fullscreen .ex-track, .ex-stage:fullscreen .grow-stage { height: 70vh; }
+  .ex-stage:fullscreen .flash-box { height: 60vh; }
+
+  .badge { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.3px; padding: 2px 7px; border-radius: 20px; margin-left: 6px; vertical-align: middle; }
+  .badge.clinical { background: rgba(53,196,138,0.18); color: var(--accent-3); border: 1px solid var(--accent-3); }
+  .badge.practice { background: var(--panel-2); color: var(--muted); border: 1px solid var(--border); }
+
+  .ev-card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; margin-bottom: 14px; }
+  .ev-card h3 { font-size: 15px; margin: 0 0 10px; }
+  .ev-card p, .ev-card li { font-size: 13px; line-height: 1.75; color: var(--text); }
+  .ev-card ul { margin: 0; padding-left: 20px; }
+  .ev-card .src { font-size: 12px; color: var(--muted); margin-top: 10px; }
+  .ev-card a { color: var(--accent); text-decoration: none; }
+  .ev-card a:hover { text-decoration: underline; }
+  .ev-verdict { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 8px; display: inline-block; margin-bottom: 10px; }
+  .ev-yes { background: rgba(53,196,138,0.18); color: var(--accent-3); }
+  .ev-no { background: rgba(255,90,90,0.15); color: var(--accent-2); }
+  .ev-mixed { background: var(--panel-2); color: var(--muted); }
+
+  .prev-item { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 13px; line-height: 1.5; margin-bottom: 6px; cursor: pointer; }
+  .prev-item:hover { background: var(--hover); }
+  .prev-item .pi-meta { font-size: 11px; color: var(--muted); display: block; margin-bottom: 2px; }
+  .prev-box { max-height: 300px; overflow-y: auto; }
+
+  /* ---- telefon düzeni ---- */
+  @media (max-width: 560px) {
+    .wrap { padding: 14px 12px 40px; }
+    h1 { font-size: 19px; }
+    .subtitle { font-size: 12px; }
+    .main-tabs { gap: 2px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .main-tab-btn { font-size: 13px; padding: 10px 8px; white-space: nowrap; }
+    .grid4 { grid-template-columns: 1fr; }
+    .panel { padding: 14px; }
+    .controls { gap: 6px; padding: 2px 10px 14px; }
+    .controls button { padding: 10px 12px; font-size: 13px; }
+    .btn-primary { min-width: 88px; }
+    .stage-bar { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; padding: 0 10px 14px; -webkit-overflow-scrolling: touch; }
+    .sb-group { flex: 0 0 auto; }
+    .progress-row { padding: 10px 12px 12px; }
+    .progress-meta { font-size: 11px; }
+    .follow-box { height: 240px; font-size: 15px; }
+    .import-row { gap: 6px; }
+    .import-row button { flex: 1; }
+    .ex-toolbar { padding: 12px; }
+    .ex-toolbar button { width: 100%; }
+    .schulte-grid { max-width: min(calc(var(--ex-h, 300px) * 1.25), 94vw); }
+    .schulte-cell { font-size: 16px; }
+    .ev-card { padding: 14px; }
+    .ev-card p, .ev-card li { font-size: 13px; }
+    .seg button { padding: 7px 9px; }
+    .stat .n { font-size: 16px; }
+    .panel h2 { flex-wrap: wrap; }
+  }
+  /* dokunmatikte buton hedeflerini büyüt */
+  @media (pointer: coarse) {
+    .sb-group button { padding: 7px 12px; }
+    .tw { padding: 2px 1px; }
+    .bm-item button, .lib-item button { padding: 4px 8px; font-size: 16px; }
+  }
+
+  .references { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); line-height: 1.7; }
+  .references a { color: var(--accent); text-decoration: none; }
+  .references a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="title-row">
+    <h1>Hızlı Okuma</h1>
+    <span class="version-badge">v8.0</span>
+  </div>
+  <div class="subtitle">Kitaplığından seç, kaldığın yerden devam et, gösterimi kendine göre ayarla.</div>
+
+  <div class="main-tabs">
+    <button class="main-tab-btn active" data-tab="reader">Hızlı Okuma</button>
+    <button class="main-tab-btn" data-tab="eyeex">Göz Egzersizleri</button>
+    <button class="main-tab-btn" data-tab="evidence">Bilimsel Temel</button>
+  </div>
+
+  <div class="tab-panel active" id="tab-reader">
+    <div class="banner" id="resumeBanner" style="display:none;">
+      <span id="resumeText"></span>
+      <div class="banner-actions">
+        <button class="btn-secondary btn-small" id="restartBtn">Baştan Başla</button>
+        <button class="btn-primary btn-small" id="bannerOkBtn">Tamam</button>
+      </div>
+    </div>
+
+    <div class="stage" id="stage">
+      <div class="display orp-on" id="display">
+        <div class="guide-line guide-left"></div>
+        <div class="guide-line guide-right"></div>
+        <div class="focus-line" id="focusLine"></div>
+        <div class="placeholder" id="placeholder">Aşağıya metnini yapıştır, bir dosya sürükle ya da "Başlat"a bas</div>
+        <div class="word" id="word" style="display:none;"></div>
+      </div>
+      <div class="progress-row">
+        <div class="progress-bar" id="progressBar">
+          <div class="progress-fill" id="progressFill"></div>
+          <div class="progress-marks" id="progressMarks"></div>
+        </div>
+        <div class="progress-meta">
+          <span id="progressText">0 / 0 kelime</span>
+          <span id="pageText"></span>
+          <span id="timeText">00:00 / 00:00</span>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="btn-secondary" id="backBtn" title="10 kelime geri (←)">« 10</button>
+        <button class="btn-primary" id="playBtn" title="Başlat / Durdur (Boşluk)">Başlat</button>
+        <button class="btn-secondary" id="resetBtn" title="Başa sar (R)">Sıfırla</button>
+        <button class="btn-secondary" id="fwdBtn" title="10 kelime ileri (→)">10 »</button>
+        <button class="btn-secondary" id="bookmarkBtn" title="Buraya yer imi koy (B)">🔖</button>
+        <button class="btn-secondary" id="fsBtn" title="Tam ekran (F) · boyut: + / −">⛶</button>
+      </div>
+      <div class="stage-bar" id="stageBar">
+        <div class="sb-group" title="Okuma hızı (↑ ↓)">
+          <span>Hız</span>
+          <button data-act="wpm-">−</button><b id="sbWpm">300</b><button data-act="wpm+">+</button>
+          <span>wpm</span>
+        </div>
+        <div class="sb-group" title="Aynı anda gösterilecek kelime sayısı">
+          <span>Grup</span>
+          <button data-act="grp-">−</button><b id="sbGrp">1</b><button data-act="grp+">+</button>
+        </div>
+        <div class="sb-group" title="Yazı boyutu (+ / −)">
+          <span>Yazı</span>
+          <button data-act="font-">−</button><b id="sbFont">46</b><button data-act="font+">+</button>
+        </div>
+        <div class="sb-group" title="Hizalama">
+          <span>Hiza</span>
+          <select id="sbAlign">
+            <option value="center">Ortala</option>
+            <option value="focus">Odak harfi</option>
+            <option value="left">Soldan</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="panels">
+      <div class="panel">
+        <h2>
+          Metin
+          <span class="seg">
+            <button id="modeEditBtn" class="active">Düzenle</button>
+            <button id="modeFollowBtn">Takip</button>
+            <button id="modePreviewBtn">Önizleme</button>
+          </span>
+        </h2>
+
+        <div id="editWrap">
+          <div class="import-zone" id="dropZone">
+            Dosyayı buraya sürükle bırak <strong>(.txt, .md, .pdf, .docx, .epub)</strong><br>
+            ya da aşağıdaki butonlarla içe aktar
+          </div>
+          <input type="file" id="fileInput" accept=".txt,.md,.pdf,.docx,.epub" hidden>
+          <div class="import-row">
+            <button class="btn-secondary btn-small" id="pickFileBtn">📁 Dosya Seç</button>
+            <button class="btn-secondary btn-small" id="clipboardBtn">📋 Panodan Yapıştır</button>
+            <button class="btn-secondary btn-small" id="clearTextBtn">🗑 Temizle</button>
+          </div>
+          <div class="import-status" id="importStatus"></div>
+          <textarea id="textInput" placeholder="Okumak istediğin metni buraya yapıştır...">Hızlı okuma, gözlerin metin üzerinde daha az durarak daha fazla kelimeyi kısa sürede algılamasını sağlayan bir tekniktir. Bu uygulama, kelimeleri ekranın ortasında tek tek veya gruplar halinde art arda göstererek gözlerin sağa sola hareket etme ihtiyacını ortadan kaldırır. Hızını yavaş başlangıç seviyesinden başlatıp zamanla artırarak, hem okuma hızını hem de anlama becerini geliştirebilirsin. İstediğin zaman durdurabilir, geri sarabilir ya da baştan başlayabilirsin.</textarea>
+        </div>
+
+        <div id="followWrap" style="display:none;">
+          <div class="follow-nav">
+            <button class="btn-secondary btn-small" id="chunkPrev">« Önceki</button>
+            <span id="chunkLabel">—</span>
+            <button class="btn-secondary btn-small" id="chunkNext">Sonraki »</button>
+          </div>
+          <div class="follow-nav" id="detachedRow" style="display:none;">
+            <span class="detached-note">Okuma konumundan farklı bir sayfaya bakıyorsun.</span>
+            <button class="btn-secondary btn-small" id="backToReading">Okunan yere dön</button>
+          </div>
+          <div class="follow-box" id="followBox"></div>
+          <div class="hint">Sayfalar arasında gezinmek okuma konumunu değiştirmez. Okumaya başka bir yerden devam etmek için bir kelimeye tıkla.</div>
+          <div class="bm-list" id="bmList"></div>
+        </div>
+
+        <div id="previewWrap" style="display:none;">
+          <div class="hint" style="margin-top:0">
+            Metnin haritası: her paragrafın ilk cümlesi. Okumaya başlamadan önce buradan hızlıca geçmek, metnin yapısını çıkarır ve gereksiz geri dönüşleri azaltır — okuma araştırmalarında desteklenen birkaç yaklaşımdan biri. Bir satıra tıklayınca okuma oradan devam eder.
+          </div>
+          <div class="prev-box" id="previewBox"></div>
+        </div>
+
+        <div class="hint">
+          Kısayollar: <kbd>Boşluk</kbd> başlat/durdur · <kbd>←</kbd> <kbd>→</kbd> 10 kelime · <kbd>↑</kbd> <kbd>↓</kbd> hız · <kbd>+</kbd> <kbd>−</kbd> yazı boyutu · <kbd>R</kbd> sıfırla · <kbd>B</kbd> yer imi · <kbd>F</kbd> tam ekran
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Okuma Ayarları</h2>
+        <div class="field">
+          <label>Hız (dakikada kelime) <span class="value" id="wpmValue">300</span></label>
+          <input type="range" id="wpmSlider" min="60" max="1200" step="10" value="300">
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Kelime grubu <span class="value" id="groupValue">1</span></label>
+            <input type="range" id="groupSlider" min="1" max="6" step="1" value="1">
+          </div>
+          <div class="field">
+            <label>Yazı boyutu <span class="value" id="fontValue">46</span></label>
+            <input type="range" id="fontSlider" min="24" max="96" step="2" value="46">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Odak vurgusu</label>
+            <select id="orpSelect">
+              <option value="on" selected>Açık (odak harfi kırmızı)</option>
+              <option value="off">Kapalı</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Akıllı tempo</label>
+            <select id="smartSelect">
+              <option value="on" selected>Açık (uzun kelime/noktalama)</option>
+              <option value="off">Kapalı (sabit tempo)</option>
+            </select>
+          </div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat"><div class="n" id="statWords">0</div><div class="l">toplam kelime</div></div>
+          <div class="stat"><div class="n" id="statRemain">0</div><div class="l">kalan dakika</div></div>
+          <div class="stat"><div class="n" id="statPct">%0</div><div class="l">ilerleme</div></div>
+        </div>
+      </div>
+
+      <div class="panel span2">
+        <h2>Görünüm ve Konfor</h2>
+        <div class="grid4">
+          <div class="field">
+            <label>Hizalama</label>
+            <select id="alignSelect">
+              <option value="center">Kelimeyi ortala</option>
+              <option value="focus">Odak harfini sabitle</option>
+              <option value="left">Soldan sabitle (gruplar için)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Dikey konum <span class="value" id="offsetValue">0</span></label>
+            <input type="range" id="offsetSlider" min="-90" max="90" step="2" value="0">
+          </div>
+          <div class="field">
+            <label>Yatay konum <span class="value" id="hoffsetValue">0</span></label>
+            <input type="range" id="hoffsetSlider" min="-250" max="250" step="5" value="0">
+          </div>
+          <div class="field">
+            <label>Alan yüksekliği <span class="value" id="heightValue">220</span></label>
+            <input type="range" id="heightSlider" min="140" max="460" step="10" value="220">
+          </div>
+          <div class="field">
+            <label>Tam ekran yazı boyutu <span class="value" id="fsFontValue">90</span></label>
+            <input type="range" id="fsFontSlider" min="40" max="220" step="5" value="90">
+          </div>
+          <div class="field">
+            <label>Tema</label>
+            <select id="themeSelect">
+              <option value="dark" selected>Koyu</option>
+              <option value="light">Açık</option>
+              <option value="sepia">Sepya</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Kılavuz çizgiler</label>
+            <select id="guideSelect">
+              <option value="on" selected>Göster</option>
+              <option value="off">Gizle</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Oturum hafızası</label>
+            <select id="memorySelect">
+              <option value="on" selected>Açık (kaldığın yeri hatırla)</option>
+              <option value="off">Kapalı</option>
+            </select>
+          </div>
+        </div>
+        <div class="hint" id="alignHint">Çok kelimeli okumada "Soldan sabitle" en kararlı seçenek: grubun sol kenarı hep aynı noktada durur. "Odak harfini sabitle" ilk kelimenin odak harfini sabit tutar.</div>
+      </div>
+
+      <div class="panel">
+        <h2>Kitaplık
+          <span style="display:flex;gap:6px">
+            <button class="btn-secondary btn-small" id="exportBtn" title="Kitapları, konumları ve ayarları tek dosyaya kaydet">⤓ Yedek al</button>
+            <button class="btn-secondary btn-small" id="importBtn" title="Başka cihazdan alınan yedeği yükle">⤒ Yedek yükle</button>
+            <button class="btn-secondary btn-small" id="libClearBtn">Sil</button>
+          </span>
+        </h2>
+        <input type="file" id="backupInput" accept=".json,application/json" hidden>
+        <div class="import-status" id="backupStatus"></div>
+        <div class="lib-list" id="libList"></div>
+        <div class="hint">Telefonda devam etmek için: burada <strong>Yedek al</strong> → dosyayı telefona gönder (WhatsApp, e-posta, bulut) → telefonda uygulamayı aç → <strong>Yedek yükle</strong>. Kitap metni, kaldığın yer, yer imleri ve ayarlar birlikte taşınır.</div>
+      </div>
+
+      <div class="panel">
+        <h2>İstatistikler</h2>
+        <div class="stat-grid">
+          <div class="stat"><div class="n" id="todayWords">0</div><div class="l">bugün kelime</div></div>
+          <div class="stat"><div class="n" id="todayMin">0</div><div class="l">bugün dakika</div></div>
+          <div class="stat"><div class="n" id="streakDays">0</div><div class="l">gün üst üste</div></div>
+        </div>
+        <div class="goal-row">
+          <span>Hedef</span>
+          <div class="goal-bar"><div class="goal-fill" id="goalFill"></div></div>
+          <input type="number" id="goalInput" min="100" step="100" value="2000" style="width:90px">
+        </div>
+        <div class="chart" id="chart"></div>
+      </div>
+
+      <div class="panel span2">
+        <h2>Anlama Kontrolü</h2>
+        <div class="ex-instructions">Okuduğun bölümden boşluk doldurma soruları üretir. Hızlı okurken gerçekten algılayıp algılamadığını ölçmenin pratik bir yolu.</div>
+        <div class="row2">
+          <div class="field">
+            <label>Hangi bölümden?</label>
+            <select id="quizRange">
+              <option value="chunk">Bulunduğum sayfa/bölüm</option>
+              <option value="300" selected>Son okunan 300 kelime</option>
+              <option value="all">Baştan buraya kadar</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Soru sayısı <span class="value" id="quizCountValue">5</span></label>
+            <input type="range" id="quizCount" min="3" max="10" step="1" value="5">
+          </div>
+        </div>
+        <button class="btn-primary" id="quizStart" style="margin-top:4px">Soruları Oluştur</button>
+        <div id="quizArea" style="margin-top:14px"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-eyeex">
+    <div class="ex-tabs">
+      <button class="ex-tab-btn active" data-ex="dot">Nokta Takibi</button>
+      <button class="ex-tab-btn" data-ex="flash">Şimşek Kelime</button>
+      <button class="ex-tab-btn" data-ex="schulte">Schulte Tablosu</button>
+      <button class="ex-tab-btn" data-ex="grow">Genişleyen Odak</button>
+    </div>
+
+    <div class="ex-toolbar">
+      <div class="field">
+        <label>Çalışma alanı boyutu <span class="value" id="exSizeValue">300</span> px</label>
+        <input type="range" id="exSize" min="200" max="900" step="20" value="300">
+      </div>
+      <button class="btn-secondary" id="exFsBtn">⛶ Egzersizi tam ekran yap</button>
+    </div>
+
+    <div class="ex-panel active" id="ex-dot">
+      <div class="ex-stage">
+        <div class="ex-instructions">
+          Başını hareket ettirmeden sadece gözlerinle noktayı takip et.
+          <span class="badge practice">pratik egzersizi</span><br>
+          <strong>Düz takip</strong> modunda nokta kesintisiz hareket eder. <strong>Sıçrama</strong> modunda nokta bir noktada durur, sonra bir sonraki konuma atlar — yüksek hızda gözün düzgün takip edemediği için bulanıklaşma/hipnoz hissi oluşur, bu modda o sorun olmaz.
+        </div>
+        <div class="ex-track" id="dotTrack"><div class="ex-dot" id="dotEl"></div></div>
+        <div class="ex-controls">
+          <div class="field">
+            <label>Mod</label>
+            <select id="dotMode">
+              <option value="pursuit">Düz takip (kesintisiz)</option>
+              <option value="saccade">Sıçrama (adım adım)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Desen</label>
+            <select id="dotPattern">
+              <option value="horizontal">Yatay</option>
+              <option value="vertical">Dikey</option>
+              <option value="circular">Dairesel</option>
+              <option value="infinity">Sonsuz (∞)</option>
+              <option value="zigzag">Zikzak</option>
+            </select>
+          </div>
+          <div class="field" id="pursuitField">
+            <label>Hız (döngü süresi) <span class="value" id="dotSpeedValue">4</span> sn</label>
+            <input type="range" id="dotSpeed" min="1" max="10" step="0.5" value="4">
+          </div>
+          <div class="field" id="saccadeField" style="display:none;">
+            <label>Duraklama <span class="value" id="dotDwellValue">600</span> ms</label>
+            <input type="range" id="dotDwell" min="150" max="2000" step="50" value="600">
+          </div>
+          <div class="field">
+            <label>Nokta boyutu <span class="value" id="dotSizeValue">22</span> px</label>
+            <input type="range" id="dotSize" min="10" max="60" step="2" value="22">
+          </div>
+          <button class="btn-primary" id="dotPlayBtn">Başlat</button>
+        </div>
+        <div class="speed-note" id="dotSpeedNote"></div>
+      </div>
+    </div>
+
+    <div class="ex-panel" id="ex-flash">
+      <div class="ex-stage">
+        <div class="ex-instructions">Ekranın ortasına bak ve kısa süreliğine beliren kelime(leri) yakalamaya çalış. <span class="badge practice">pratik egzersizi</span><br>Tek bakışta kelime tanıma pratiği yaptırır. Kelime tanımanın otomatikleşmesi okuma hızının gerçek belirleyicisidir; ancak bu alıştırmanın okuma hızına aktarımı ölçülmüş değil. "Hızlı Okuma" sekmesine metin girersen o metin kullanılır.</div>
+        <div class="flash-box" id="flashBox">Başlat'a bas</div>
+        <div class="ex-controls">
+          <div class="field">
+            <label>Gösterim süresi <span class="value" id="flashDurValue">200</span> ms</label>
+            <input type="range" id="flashDur" min="80" max="600" step="10" value="200">
+          </div>
+          <div class="field">
+            <label>Bekleme süresi <span class="value" id="flashGapValue">500</span> ms</label>
+            <input type="range" id="flashGap" min="150" max="1500" step="50" value="500">
+          </div>
+          <div class="field">
+            <label>Kelime sayısı <span class="value" id="flashCountValue">1</span></label>
+            <input type="range" id="flashCount" min="1" max="4" step="1" value="1">
+          </div>
+          <button class="btn-primary" id="flashPlayBtn">Başlat</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ex-panel" id="ex-schulte">
+      <div class="ex-stage">
+        <div class="ex-instructions">Gözünü tablonun ortasında tutmaya çalışarak 1'den başlayıp sırayla tüm sayıları bul ve tıkla. <span class="badge practice">dikkat / görsel arama oyunu</span><br>Süreni kendi geçmişinle karşılaştır. Not: Bu tablonun "görüş açısını genişlettiği" ya da dikkati kalıcı olarak artırdığı yönündeki yaygın iddiaların güvenilir hakemli kaynağı yoktur; gelişme çoğunlukla bu görevin kendisinde kalır.</div>
+        <div class="schulte-center-dot"></div>
+        <div class="schulte-grid" id="schulteGrid"></div>
+        <div class="schulte-meta">
+          <span id="schulteStatus">Başlamak için 1'e tıkla</span>
+          <span id="schulteTimer">00.0 sn</span>
+        </div>
+        <div class="ex-controls">
+          <div class="field">
+            <label>Tablo boyutu</label>
+            <select id="schulteSize">
+              <option value="3">3 x 3</option>
+              <option value="4">4 x 4</option>
+              <option value="5" selected>5 x 5</option>
+              <option value="6">6 x 6</option>
+            </select>
+          </div>
+          <button class="btn-secondary" id="schulteNewBtn">Yeni Tablo</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ex-panel" id="ex-grow">
+      <div class="ex-stage">
+        <div class="ex-instructions">Merkezdeki kırmızı noktaya sabit bak; etrafında büyüyüp küçülen şekli gözünü kaydırmadan çevresel görüşünle fark etmeye çalış. <span class="badge practice">pratik egzersizi</span><br>Sabit bakış disiplini için rahatlatıcı bir alıştırma. "Görme alanını kalıcı genişletir" iddiası kanıtlanmış değildir; mola egzersizi olarak kullan.</div>
+        <div class="grow-stage" id="growStage">
+          <div class="grow-fixation"></div>
+          <div class="grow-shape circle" id="growShape"></div>
+        </div>
+        <div class="ex-controls">
+          <div class="field">
+            <label>Şekil</label>
+            <select id="growShapeSelect">
+              <option value="circle">Daire</option>
+              <option value="square">Kare</option>
+              <option value="rect">Dikdörtgen</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Döngü süresi <span class="value" id="growSpeedValue">4</span> sn</label>
+            <input type="range" id="growSpeed" min="2" max="10" step="0.5" value="4">
+          </div>
+          <button class="btn-primary" id="growPlayBtn">Başlat</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="references">
+      <strong>Referanslar ve ilham alınan kaynaklar:</strong><br>
+      Bu sekmedeki egzersizler, aşağıdaki hızlı okuma platformlarında yer alan genel egzersiz kategorilerinden (nokta/şekil takibi, görüş açısı genişletme, takistoskop, sayı tablosu) esinlenerek özgün olarak baştan tasarlanmıştır; herhangi bir içerik veya kod kopyalanmamıştır.<br>
+      · <a href="https://www.m5bilisim.com/tr/hizli-okuma/" target="_blank" rel="noopener">m5bilisim.com — Hızlı Okuma Eğitimi ve Egzersizleri</a><br>
+      · <a href="https://www.hizliokuma.org/mho/" target="_blank" rel="noopener">hizliokuma.org — Mega Hızlı Okuma / Göz Açısı Genişletme Uygulaması</a>
+    </div>
+  </div>
+
+  <!-- ========== EVIDENCE ========== -->
+  <div class="tab-panel" id="tab-evidence">
+    <div class="ev-card">
+      <h3>Bu sayfa ne işe yarıyor?</h3>
+      <p>Hızlı okuma alanı abartılı iddialarla dolu. Aşağıda, bu uygulamadaki yöntemlerin bilimsel literatürde nerede durduğunu olduğu gibi yazdım: neyin işe yaradığı gösterilmiş, neyin gösterilmemiş. Kaynaklar her bölümün altında.</p>
+    </div>
+
+    <div class="ev-card">
+      <h3>1. Okuma hızının asıl sınırı gözlerin değil, beynin</h3>
+      <span class="ev-verdict ev-yes">Güçlü kanıt</span>
+      <p>Okuma biliminin en kapsamlı derlemelerinden birine göre göz hareketleri toplam okuma süresinin yalnızca yaklaşık <strong>%10'unu</strong> kaplıyor. Asıl darboğaz kelimeleri tanıma ve cümleyi anlamlandırma hızı. Yani "gözünü hızlandırarak" okuma hızını katlamak mümkün değil; bu, hızlı okuma kurslarının en yaygın yanılgısı.</p>
+      <p>Aynı derleme <strong>hız–anlama dengesinin gerçek olduğunu</strong> söylüyor: hızı iki-üç katına çıkarıp anlamayı aynı seviyede tutmak beklenmemeli. Buna karşılık, amacın metnin genel fikrini yakalamak olduğu durumlarda <em>bilinçli tarama (skimming)</em> becerisi geliştirilebilir.</p>
+      <div class="src">Kaynak: Rayner, Schotter, Masson, Potter &amp; Treiman (2016), <em>Psychological Science in the Public Interest</em> —
+        <a href="https://www.psychologicalscience.org/publications/speed_reading.html" target="_blank" rel="noopener">"So Much to Read, So Little Time"</a> ·
+        <a href="https://www.psychologicalscience.org/observer/speed-reading-promises-are-too-good-to-be-true-scientists-find-2" target="_blank" rel="noopener">özet haber</a>
+      </div>
+    </div>
+
+    <div class="ev-card">
+      <h3>2. RSVP'nin (bu uygulamanın yönteminin) bilinen zayıf noktası</h3>
+      <span class="ev-verdict ev-mixed">Sınırlı / koşullu</span>
+      <p>Kelimeleri tek tek ekranın ortasında gösteren yöntem (RSVP) göz hareketlerini ortadan kaldırır, ama bir yan etkisi var: <strong>geri dönüp tekrar okuyamazsın</strong>. Araştırmalar, normal okumada geriye sıçramaların (regresyon) anlamayı desteklediğini, bu imkânı kaldırmanın anlamayı <em>düşürdüğünü</em> gösteriyor.</p>
+      <p>Pratik sonuç: RSVP'yi kolay/tanıdık metinlerde, genel fikir edinmek ve hız pratiği yapmak için kullan. Ders çalışılan, yoğun veya teknik metinlerde normal okumaya dön — ya da bu uygulamada hızı düşürüp grup boyutunu 1'e al ve sık sık geri sar.</p>
+      <div class="src">Kaynak: Schotter, Tran &amp; Rayner (2014) —
+        <a href="https://today.ucsd.edu/story/dont_believe_what_you_read_only_once_speed_reading_apps_may_impair_reading" target="_blank" rel="noopener">UC San Diego duyurusu</a> ·
+        <a href="https://www.psychologicalscience.org/news/releases/speed-reading-apps-may-impair-reading-comprehension-by-limiting-ability-to-backtrack.html" target="_blank" rel="noopener">APS bildirisi</a>
+      </div>
+    </div>
+
+    <div class="ev-card">
+      <h3>3. Göz egzersizleri okumayı iyileştirir mi?</h3>
+      <span class="ev-verdict ev-no">Okuma için kanıt yok</span>
+      <p>Burada net bir ayrım var:</p>
+      <ul>
+        <li><strong>Teşhis konmuş bir göz koordinasyon bozukluğunda (yakınsama yetmezliği) görme terapisi işe yarıyor.</strong> ABD Ulusal Göz Enstitüsü destekli CITT çalışmasında, uzman eşliğinde yapılan ofis temelli terapi + ev çalışması, çocukların yaklaşık <strong>%75'inde</strong> yakın çalışma şikâyetlerini azaltmış; evde yapılan kalem egzersizleri (%43) ve bilgisayar tabanlı ev terapisi (%33) belirgin şekilde daha zayıf kalmış.</li>
+        <li><strong>Ama aynı araştırma hattı, bu terapinin okuma test puanlarını yükseltmediğini ortaya koydu.</strong> Yani göz egzersizi semptomu azaltır, okuma becerisini değil.</li>
+        <li>Göz hareketi eğitiminin okuma hızını artırdığı gösterilen tek grup, merkezi görme kaybı olan hastalar (yaşa bağlı makula dejenerasyonu) — sağlıklı okuyucular için geçerli değil.</li>
+      </ul>
+      <p>Bu yüzden bu uygulamadaki egzersizleri dürüstçe etiketledim: bunlar <em>dikkat ve görsel arama pratiği</em>. Keyifli ve zararsız; ama "okuma hızını şu kadar artırır" iddiası taşımıyorlar. İnternette dolaşan "Schulte tablosu dikkati %30 artırır" türü rakamların güvenilir hakemli bir kaynağı yok — bunlar çoğunlukla uygulama tanıtım metinlerinden geliyor. Bilişsel alıştırmalarda gelişme genelde <strong>alıştırmanın kendisinde</strong> kalır, günlük işlere aktarımı sınırlıdır.</p>
+      <div class="src">Kaynaklar:
+        <a href="https://www.nei.nih.gov/research-and-training/research-news/more-effective-treatment-identified-common-childhood-vision-disorder" target="_blank" rel="noopener">National Eye Institute — CITT sonuçları</a> ·
+        <a href="https://www.cochrane.org/evidence/CD006768_how-do-different-treatments-vision-disorder-convergence-insufficiency-compare-effectiveness" target="_blank" rel="noopener">Cochrane derlemesi</a> ·
+        <a href="https://reviewofoptometry.com/article/comanaging-vt-after-citt" target="_blank" rel="noopener">Review of Optometry — CITT ve okuma performansı</a> ·
+        <a href="https://lighthouseguild.org/eye-movement-exercises-improve-reading-speed-in-people-with-age-related-macular-degeneration/" target="_blank" rel="noopener">Makula dejenerasyonunda göz hareketi eğitimi</a>
+      </div>
+    </div>
+
+    <div class="ev-card">
+      <h3>4. Ekran yorgunluğu ve 20-20-20 kuralı</h3>
+      <span class="ev-verdict ev-mixed">Zayıf kanıt, yine de makul</span>
+      <p>"Her 20 dakikada bir, 20 saniye boyunca 6 metre uzağa bak" kuralı çok yaygın önerilir ama hakemli kanıtı zayıf: <em>Optometry and Vision Science</em>'ta yayımlanan bir çalışma bu kuralın dijital göz yorgunluğunu önlemede etkili olduğuna dair destek bulamadı. 2024 tarihli bazı çalışmalar ise düzenli uygulandığında şikâyetlerde azalma bildirdi. Araştırmacıların ortak vurgusu: mola vermenin yararsız olduğu sonucu çıkarılmamalı, daha uzun molaların etkisi araştırılmalı.</p>
+      <p>Pratik yaklaşım: kuralı bir reçete değil, hatırlatıcı olarak kullan. Uzun RSVP seanslarında 20–30 dakikada bir ara ver, uzağa bak, bilinçli birkaç kez göz kırp.</p>
+      <div class="src">Kaynak: <a href="https://glance.eyesoneyecare.com/stories/2023-01-25/20-20-20-rule-may-not-actually-help-digital-eye-strain/" target="_blank" rel="noopener">Optometry and Vision Science çalışmasının özeti</a></div>
+    </div>
+
+    <div class="ev-card">
+      <h3>5. Gerçekten işe yaradığı gösterilen şeyler</h3>
+      <span class="ev-verdict ev-yes">Desteklenen yaklaşımlar</span>
+      <ul>
+        <li><strong>Çok okumak.</strong> Kelime tanıma otomatikleştikçe okuma hızlanır; kestirmesi yok.</li>
+        <li><strong>Kelime dağarcığı ve konu bilgisi.</strong> Tanıdık kelime ve konu, çözümleme süresini kısaltır — hız artışının en sağlam yolu bu.</li>
+        <li><strong>Önce önizleme, sonra okuma.</strong> Başlıkları ve paragrafların ilk cümlelerini tarayıp metnin haritasını çıkarmak, gereksiz geri dönüşleri azaltır. (Uygulamadaki <em>Önizleme</em> modu tam olarak bunun için.)</li>
+        <li><strong>Amacı belirlemek.</strong> Metinden ne aradığını bilen okuyucu, anlamı kaybetmeden daha hızlı ilerleyebilir.</li>
+        <li><strong>Anlamayı ölçmek.</strong> Hız tek başına anlamsız; önemli olan <em>etkili okuma hızı</em> = hız × anlama oranı. Uygulamadaki anlama kontrolü bunu hesaplıyor.</li>
+      </ul>
+      <div class="src">Kaynak: Rayner ve ark. (2016) derlemesi ve okuma stratejileri literatürü.</div>
+    </div>
+
+    <div class="ev-card">
+      <h3>6. Bu uygulamayı kanıta uygun kullanma önerileri</h3>
+      <ul>
+        <li>Yetişkinlerde sessiz okuma hızı tipik olarak <strong>200–300 wpm</strong> aralığındadır. Kendi normal hızını ölç, üzerine %20–30 ekleyerek başla.</li>
+        <li>Anlama kontrolünde skorun <strong>%70'in altına</strong> düşüyorsa hız senin için fazla demektir; kademeli düşür.</li>
+        <li>Zor metin: grup 1, düşük hız, odak harfi sabitleme. Kolay metin: grup 2–3, soldan sabitleme.</li>
+        <li>Göz egzersizlerini ısınma/mola aktivitesi olarak kullan, "hız artırıcı tedavi" olarak değil.</li>
+        <li>Gözlerinde sürekli zorlanma, çift görme, baş ağrısı varsa bu bir uygulamanın değil, göz hekiminin konusudur.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Kütüphaneler artık depodan geliyor: uygulama hiçbir dış sunucuya bağlanmaz,
+     internetsiz de çalışır. Dosyalar cdnjs'ten indirilip SHA-512 ile doğrulandı. -->
+<script src="lib/pdf.min.js"></script>
+<script src="lib/mammoth.browser.min.js"></script>
+<script src="lib/jszip.min.js"></script>
+<script>
+(function () {
+  if (window.pdfjsLib) {
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'lib/pdf.worker.min.js';
+  }
+
+  // Çevrimdışı çalışma. Yalnızca http(s) üzerinde kayıt edilebilir; dosyayı
+  // doğrudan çift tıklayarak açtığında (file://) sessizce atlanır.
+  if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+
+  const $ = id => document.getElementById(id);
+
+  document.querySelectorAll('.main-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.main-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      $('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  const stage = $('stage'), display = $('display'), wordEl = $('word'), placeholder = $('placeholder');
+  const textInput = $('textInput'), playBtn = $('playBtn');
+  const wpmSlider = $('wpmSlider'), groupSlider = $('groupSlider'), fontSlider = $('fontSlider');
+  const orpSelect = $('orpSelect'), smartSelect = $('smartSelect'), alignSelect = $('alignSelect');
+  const offsetSlider = $('offsetSlider'), hoffsetSlider = $('hoffsetSlider'), heightSlider = $('heightSlider');
+  const fsFontSlider = $('fsFontSlider'), themeSelect = $('themeSelect'), guideSelect = $('guideSelect');
+  const memorySelect = $('memorySelect'), goalInput = $('goalInput');
+  const progressBar = $('progressBar'), progressFill = $('progressFill'), progressMarks = $('progressMarks');
+  const followBox = $('followBox'), chunkLabel = $('chunkLabel'), bmList = $('bmList'), libList = $('libList');
+  const resumeBanner = $('resumeBanner'), importStatus = $('importStatus');
+
+  /* ===== state ===== */
+  let words = [], pageStarts = null, groups = [], chunks = [], paraStarts = [];
+  let gi = 0, playing = false, playTimer = null, lastTickTs = 0;
+  let fp = null, docTitle = '', marks = [], unitName = 'Sayfa';
+  let followMode = false, uiMode = 'edit', viewChunk = 0, viewFollows = true;
+  let cssImmersive = false;
+  // gerçek tam ekran API'si ya da onun yerine geçen CSS modu
+  function isImmersive() { return document.fullscreenElement === stage || cssImmersive; }
+  let renderedChunk = -1, chunkEls = [], lastHl = [];
+
+  /* ===== storage ===== */
+  const K_STATE = 'speedreader.v4.state';
+  const K_TEXT = 'speedreader.v4.text';
+  let store = { settings: {}, library: {}, stats: { days: {}, goal: 2000 }, lastFp: null };
+
+  const memoryOn = () => memorySelect.value === 'on';
+  const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } };
+  const lsDel = k => { try { localStorage.removeItem(k); } catch (e) {} };
+  function storageAvailable() { try { localStorage.setItem('__t', '1'); localStorage.removeItem('__t'); return true; } catch (e) { return false; } }
+
+  /* IndexedDB: book texts */
+  const DB_NAME = 'speedreader', DB_STORE = 'books';
+  let dbPromise = null;
+  function idb() {
+    if (dbPromise) return dbPromise;
+    dbPromise = new Promise((res, rej) => {
+      if (!window.indexedDB) return rej(new Error('yok'));
+      const r = indexedDB.open(DB_NAME, 1);
+      r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains(DB_STORE)) r.result.createObjectStore(DB_STORE, { keyPath: 'fp' }); };
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+    }).catch(() => null);
+    return dbPromise;
+  }
+  async function idbPut(rec) {
+    const db = await idb(); if (!db) return false;
+    return new Promise(res => {
+      try {
+        const tx = db.transaction(DB_STORE, 'readwrite');
+        tx.objectStore(DB_STORE).put(rec);
+        tx.oncomplete = () => res(true);
+        tx.onerror = () => res(false);
+      } catch (e) { res(false); }
+    });
+  }
+  async function idbGet(key) {
+    const db = await idb(); if (!db) return null;
+    return new Promise(res => {
+      try {
+        const req = db.transaction(DB_STORE, 'readonly').objectStore(DB_STORE).get(key);
+        req.onsuccess = () => res(req.result || null);
+        req.onerror = () => res(null);
+      } catch (e) { res(null); }
+    });
+  }
+  async function idbDel(key) {
+    const db = await idb(); if (!db) return;
+    try {
+      const tx = db.transaction(DB_STORE, 'readwrite');
+      tx.objectStore(DB_STORE).delete(key);
+    } catch (e) {}
+  }
+
+  async function saveBookText() {
+    if (!memoryOn() || !fp) return;
+    const ok = await idbPut({ fp: fp, text: textInput.value, pageStarts: pageStarts });
+    if (!ok) {
+      if (textInput.value.length <= 2000000) lsSet(K_TEXT, JSON.stringify({ fp: fp, text: textInput.value, pageStarts: pageStarts }));
+    }
+  }
+  async function loadBookText(key) {
+    const rec = await idbGet(key);
+    if (rec) return rec;
+    try {
+      const raw = JSON.parse(lsGet(K_TEXT) || 'null');
+      if (raw && raw.fp === key) return raw;
+    } catch (e) {}
+    return null;
+  }
+
+  function loadStore() {
+    try {
+      const parsed = JSON.parse(lsGet(K_STATE) || 'null');
+      if (parsed && typeof parsed === 'object') {
+        store = Object.assign(store, parsed);
+        store.settings = store.settings || {};
+        store.library = store.library || {};
+        store.stats = store.stats || { days: {}, goal: 2000 };
+        store.stats.days = store.stats.days || {};
+      }
+    } catch (e) {}
+  }
+  let saveTimer = null;
+  function saveSoon() { if (!memoryOn()) return; clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 700); }
+  function saveNow() {
+    if (!memoryOn()) return;
+    if (fp && words.length) {
+      // ts yalnızca okuma konumu gerçekten ilerlediğinde tazelenir; böylece
+      // "en son okunan kazanır" kuralı cihazlar arasında güvenilir olur
+      const prevEntry = store.library[fp];
+      const posNow = currentWord();
+      const moved = !prevEntry || prevEntry.pos !== posNow;
+      store.library[fp] = {
+        pos: posNow, total: words.length, title: docTitle,
+        ts: moved ? Date.now() : (prevEntry.ts || Date.now()),
+        marks: marks, pages: pageStarts ? pageStarts.length : 0, unit: unitName
+      };
+      store.lastFp = fp;
+      const keys = Object.keys(store.library);
+      if (keys.length > 30) {
+        keys.sort((a, b) => (store.library[a].ts || 0) - (store.library[b].ts || 0));
+        keys.slice(0, keys.length - 30).forEach(k => { delete store.library[k]; idbDel(k); });
+      }
+    }
+    store.settings = {
+      wpm: wpmSlider.value, group: groupSlider.value, font: fontSlider.value, orp: orpSelect.value,
+      smart: smartSelect.value, align: alignSelect.value, offset: offsetSlider.value,
+      hoffset: hoffsetSlider.value, height: heightSlider.value, fsFont: fsFontSlider.value,
+      theme: themeSelect.value, guides: guideSelect.value, memory: memorySelect.value,
+      exSize: $('exSize').value, dotSize: $('dotSize').value, dotMode: $('dotMode').value,
+      mode: uiMode
+    };
+    store.stats.goal = parseInt(goalInput.value, 10) || 2000;
+    lsSet(K_STATE, JSON.stringify(store));
+  }
+
+  function fingerprint(text) {
+    let h = 0;
+    const sample = text.length + '|' + text.slice(0, 400) + text.slice(-400);
+    for (let i = 0; i < sample.length; i++) h = (h * 31 + sample.charCodeAt(i)) | 0;
+    return text.length + '-' + (h >>> 0).toString(36);
+  }
+
+  /* ===== text model ===== */
+  const tokenize = t => t.replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
+  const groupSize = () => parseInt(groupSlider.value, 10);
+  const smartOn = () => smartSelect.value === 'on';
+  const sentenceEnd = w => /[.!?…]["'”’)\]]?$/.test(w);
+  const currentWord = () => groups.length ? groups[Math.min(gi, groups.length - 1)].s : 0;
+
+  // chunks are built first; group boundaries always align with chunk boundaries
+  function buildChunks() {
+    chunks = [];
+    if (pageStarts && pageStarts.length) {
+      for (let p = 0; p < pageStarts.length; p++) {
+        const s = pageStarts[p];
+        const e = p + 1 < pageStarts.length ? pageStarts[p + 1] : words.length;
+        if (e > s) chunks.push({ s: s, e: e, label: unitName + ' ' + (p + 1) });
+      }
+    } else {
+      const SZ = 400;
+      for (let i = 0; i < words.length; i += SZ) {
+        chunks.push({ s: i, e: Math.min(i + SZ, words.length), label: 'Bölüm ' + (chunks.length + 1) });
+      }
+    }
+    if (!chunks.length) chunks.push({ s: 0, e: 0, label: '—' });
+    renderedChunk = -1;
+  }
+
+  function buildGroups() {
+    const size = groupSize();
+    const hardBreak = new Set();
+    chunks.forEach(c => hardBreak.add(c.s));
+    groups = [];
+    let i = 0;
+    while (i < words.length) {
+      let end = Math.min(i + size, words.length);
+      for (let k = i + 1; k < end; k++) if (hardBreak.has(k)) { end = k; break; }
+      if (size > 1 && smartOn()) {
+        for (let k = i; k < end - 1; k++) if (sentenceEnd(words[k])) { end = k + 1; break; }
+      }
+      groups.push({ s: i, e: end });
+      i = end;
+    }
+    if (!groups.length) groups.push({ s: 0, e: 0 });
+  }
+
+  function bsearch(arr, w, key) {
+    let lo = 0, hi = arr.length - 1, res = 0;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if ((key ? arr[mid][key] : arr[mid]) <= w) { res = mid; lo = mid + 1; } else hi = mid - 1;
+    }
+    return res;
+  }
+  const groupOfWord = w => bsearch(groups, w, 's');
+  const chunkOfWord = w => bsearch(chunks, w, 's');
+  const pageOfWord = w => pageStarts ? bsearch(pageStarts, w) + 1 : null;
+
+  /* ===== rendering ===== */
+  const escapeHtml = s => s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  function orpIndex(word) {
+    const len = word.length;
+    if (len <= 1) return 0;
+    const p = Math.floor(len * 0.35);
+    return p >= len ? len - 1 : p;
+  }
+  function wordHtml(word) {
+    const p = orpIndex(word);
+    return '<span class="w">' + escapeHtml(word.slice(0, p)) + '<span class="orp">' + escapeHtml(word[p] || '') + '</span>' + escapeHtml(word.slice(p + 1)) + '</span>';
+  }
+
+  function applyWordTransform() {
+    const off = parseInt(offsetSlider.value, 10), hoff = parseInt(hoffsetSlider.value, 10);
+    const mode = alignSelect.value;
+    let tx = '-50%';
+    if (mode === 'focus') {
+      // pin the FIRST word's focus letter so the group's start never drifts
+      const first = wordEl.querySelector('.w');
+      const pin = first && first.querySelector('.orp');
+      if (pin) tx = '-' + (pin.offsetLeft + pin.offsetWidth / 2) + 'px';
+    } else if (mode === 'left') {
+      tx = (-0.28 * display.clientWidth).toFixed(1) + 'px';
+    }
+    wordEl.style.transform = 'translate(calc(' + tx + ' + ' + hoff + 'px), calc(-50% + ' + off + 'px))';
+  }
+
+  // Yazı boyutu ayarı bir üst sınırdır: grup ekrana sığmıyorsa (dar telefon
+  // ekranı ya da çok kelimeli grup) o adım için otomatik küçültülür.
+  function fitWordToDisplay() {
+    // Temel boyut her durumda uygulanır; ölçüm yapılamıyorsa (alan gizliyse
+    // clientWidth 0 gelir) yalnızca küçültme adımı atlanır.
+    const base = currentFontPx();
+    wordEl.style.fontSize = base + 'px';
+    const avail = display.clientWidth - 24;
+    if (avail <= 0) return;
+    const needed = wordEl.scrollWidth;
+    if (needed > avail) {
+      wordEl.style.fontSize = Math.max(14, Math.floor(base * (avail / needed))) + 'px';
+    }
+  }
+
+  function renderGroup() {
+    const g = groups[Math.min(gi, groups.length - 1)] || { s: 0, e: 0 };
+    wordEl.innerHTML = words.slice(g.s, g.e).map(wordHtml).join(' ');
+    fitWordToDisplay();
+    applyWordTransform();
+    updateProgress();
+    if (viewFollows) viewChunk = chunkOfWord(g.s);
+    if (followMode) renderFollow();
+    saveSoon();
+  }
+
+  function formatTime(sec) {
+    sec = Math.max(0, Math.round(sec));
+    const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+    const mm = String(m).padStart(2, '0'), ss = String(s).padStart(2, '0');
+    return h > 0 ? h + ':' + mm + ':' + ss : mm + ':' + ss;
+  }
+
+  function updateProgress() {
+    const total = words.length;
+    const g = groups[Math.min(gi, groups.length - 1)] || { s: 0, e: 0 };
+    const done = Math.min(g.e, total);
+    const pct = total ? (done / total) * 100 : 0;
+    progressFill.style.width = pct + '%';
+    $('progressText').textContent = done + ' / ' + total + ' kelime';
+    $('statPct').textContent = '%' + Math.round(pct);
+    const wpm = parseInt(wpmSlider.value, 10);
+    $('timeText').textContent = formatTime((done / wpm) * 60) + ' / ' + formatTime((total / wpm) * 60);
+    $('statWords').textContent = total;
+    $('statRemain').textContent = total ? Math.max(0, (total - done) / wpm).toFixed(1) : '0';
+    const pg = pageOfWord(g.s);
+    if (pg) $('pageText').textContent = unitName + ' ' + pg + ' / ' + pageStarts.length;
+    else if (chunks.length > 1) $('pageText').textContent = 'Bölüm ' + (chunkOfWord(g.s) + 1) + ' / ' + chunks.length;
+    else $('pageText').textContent = '';
+    progressMarks.innerHTML = total ? marks.map(m => '<div class="progress-mark" style="left:' + ((m.w / total) * 100) + '%"></div>').join('') : '';
+  }
+
+  /* ===== follow view (browsing is independent from reading position) ===== */
+  function renderFollow() {
+    if (!words.length) { followBox.innerHTML = '<span class="empty-note">Henüz metin yok.</span>'; chunkLabel.textContent = '—'; return; }
+    viewChunk = Math.min(Math.max(0, viewChunk), chunks.length - 1);
+    const ch = chunks[viewChunk];
+    if (viewChunk !== renderedChunk) {
+      const parts = [];
+      for (let i = ch.s; i < ch.e; i++) parts.push('<span class="tw" data-i="' + i + '">' + escapeHtml(words[i]) + '</span>');
+      followBox.innerHTML = parts.join(' ');
+      chunkEls = Array.prototype.slice.call(followBox.children);
+      renderedChunk = viewChunk;
+      lastHl = [];
+      followBox.scrollTop = 0;
+      const markSet = {};
+      marks.forEach(m => { markSet[m.w] = true; });
+      chunkEls.forEach((el, k) => { if (markSet[ch.s + k]) el.classList.add('mark'); });
+    }
+    chunkLabel.textContent = ch.label + ' / ' + chunks.length;
+    $('chunkPrev').disabled = viewChunk === 0;
+    $('chunkNext').disabled = viewChunk >= chunks.length - 1;
+    $('detachedRow').style.display = viewFollows ? 'none' : 'flex';
+
+    lastHl.forEach(el => el.classList.remove('cur'));
+    lastHl = [];
+    const g = groups[Math.min(gi, groups.length - 1)];
+    const cur = currentWord();
+    for (let i = g.s; i < g.e; i++) {
+      const el = chunkEls[i - ch.s];
+      if (el) { el.classList.add('cur'); lastHl.push(el); }
+    }
+    chunkEls.forEach((el, k) => { el.classList.toggle('read', ch.s + k < cur); });
+
+    if (viewFollows && lastHl[0]) {
+      const rel = lastHl[0].offsetTop - followBox.scrollTop;
+      if (rel < followBox.clientHeight * 0.2 || rel > followBox.clientHeight * 0.7) {
+        followBox.scrollTop = lastHl[0].offsetTop - followBox.clientHeight * 0.4;
+      }
+    }
+  }
+
+  followBox.addEventListener('click', e => {
+    const t = e.target.closest('.tw');
+    if (!t) return;
+    viewFollows = true;
+    jumpToWord(parseInt(t.dataset.i, 10));
+  });
+  $('chunkPrev').addEventListener('click', () => { viewChunk--; viewFollows = false; renderFollow(); });
+  $('chunkNext').addEventListener('click', () => { viewChunk++; viewFollows = false; renderFollow(); });
+  $('backToReading').addEventListener('click', () => { viewFollows = true; viewChunk = chunkOfWord(currentWord()); renderFollow(); });
+
+  // paragraf başlangıçları: önizleme haritası bunun üzerine kuruluyor
+  function buildParagraphs() {
+    paraStarts = [];
+    let count = 0;
+    textInput.value.split(/\n+/).forEach(p => {
+      const n = tokenize(p).length;
+      if (n > 0) { paraStarts.push(count); count += n; }
+    });
+  }
+
+  function renderPreview() {
+    const box = $('previewBox');
+    if (!words.length || !paraStarts.length) {
+      box.innerHTML = '<div class="empty-note">Önizleme için metin yok.</div>';
+      return;
+    }
+    box.innerHTML = '';
+    const LIMIT = 800;
+    paraStarts.slice(0, LIMIT).forEach((s, i) => {
+      const end = i + 1 < paraStarts.length ? paraStarts[i + 1] : words.length;
+      const cap = Math.min(end, s + 25);
+      let stop = cap;
+      for (let k = s; k < cap; k++) if (sentenceEnd(words[k])) { stop = k + 1; break; }
+      const pg = pageOfWord(s);
+      const item = document.createElement('div');
+      item.className = 'prev-item';
+      const meta = document.createElement('span');
+      meta.className = 'pi-meta';
+      meta.textContent = (pg ? unitName + ' ' + pg : 'Paragraf ' + (i + 1)) + ' · %' + Math.round((s / words.length) * 100);
+      item.appendChild(meta);
+      item.appendChild(document.createTextNode(words.slice(s, stop).join(' ') + (stop < end ? ' …' : '')));
+      item.addEventListener('click', () => { viewFollows = true; jumpToWord(s); });
+      box.appendChild(item);
+    });
+    if (paraStarts.length > LIMIT) {
+      const n = document.createElement('div');
+      n.className = 'empty-note';
+      n.textContent = 'İlk ' + LIMIT + ' paragraf gösteriliyor (toplam ' + paraStarts.length + ').';
+      box.appendChild(n);
+    }
+  }
+
+  function setMode(m) {
+    const mode = m === true ? 'follow' : m === false ? 'edit' : m;
+    uiMode = mode;
+    followMode = mode === 'follow';
+    $('editWrap').style.display = mode === 'edit' ? 'block' : 'none';
+    $('followWrap').style.display = mode === 'follow' ? 'block' : 'none';
+    $('previewWrap').style.display = mode === 'preview' ? 'block' : 'none';
+    $('modeEditBtn').classList.toggle('active', mode === 'edit');
+    $('modeFollowBtn').classList.toggle('active', mode === 'follow');
+    $('modePreviewBtn').classList.toggle('active', mode === 'preview');
+    if (mode === 'follow') { viewFollows = true; viewChunk = chunkOfWord(currentWord()); renderedChunk = -1; renderFollow(); renderBookmarks(); }
+    if (mode === 'preview') renderPreview();
+    saveSoon();
+  }
+  $('modeEditBtn').addEventListener('click', () => setMode('edit'));
+  $('modeFollowBtn').addEventListener('click', () => setMode('follow'));
+  $('modePreviewBtn').addEventListener('click', () => setMode('preview'));
+
+  /* ===== bookmarks ===== */
+  function addBookmark() {
+    if (!words.length) return;
+    const w = currentWord();
+    if (marks.some(m => m.w === w)) return;
+    marks.push({ w: w, label: words.slice(w, w + 6).join(' ') });
+    marks.sort((a, b) => a.w - b.w);
+    renderBookmarks();
+    updateProgress();
+    renderedChunk = -1;
+    if (followMode) renderFollow();
+    saveNow();
+  }
+  function renderBookmarks() {
+    if (!marks.length) { bmList.innerHTML = '<div class="empty-note">Henüz yer imi yok. 🔖 ile ekleyebilirsin.</div>'; return; }
+    bmList.innerHTML = '';
+    marks.forEach((m, idx) => {
+      const pg = pageOfWord(m.w);
+      const pct = words.length ? Math.round((m.w / words.length) * 100) : 0;
+      const row = document.createElement('div');
+      row.className = 'bm-item';
+      const label = document.createElement('span');
+      label.className = 't';
+      label.textContent = (pg ? unitName + ' ' + pg + ' · ' : '') + '%' + pct + ' — ' + m.label;
+      label.addEventListener('click', () => { viewFollows = true; jumpToWord(m.w); });
+      const del = document.createElement('button');
+      del.textContent = '×'; del.title = 'Sil';
+      del.addEventListener('click', () => {
+        marks.splice(idx, 1);
+        renderBookmarks(); updateProgress();
+        renderedChunk = -1; if (followMode) renderFollow();
+        saveNow();
+      });
+      row.appendChild(label); row.appendChild(del);
+      bmList.appendChild(row);
+    });
+  }
+
+  /* ===== stats ===== */
+  const todayKey = () => new Date().toISOString().slice(0, 10);
+  function recordRead(nWords, ms) {
+    const d = todayKey();
+    const day = store.stats.days[d] || { words: 0, ms: 0 };
+    day.words += nWords;
+    day.ms += Math.min(ms, 5000);
+    store.stats.days[d] = day;
+    const keys = Object.keys(store.stats.days);
+    if (keys.length > 120) { keys.sort(); keys.slice(0, keys.length - 120).forEach(k => delete store.stats.days[k]); }
+  }
+  function renderStats() {
+    const d = todayKey();
+    const day = store.stats.days[d] || { words: 0, ms: 0 };
+    $('todayWords').textContent = day.words;
+    $('todayMin').textContent = (day.ms / 60000).toFixed(1);
+    const goal = parseInt(goalInput.value, 10) || 2000;
+    $('goalFill').style.width = Math.min(100, (day.words / goal) * 100) + '%';
+
+    let streak = 0;
+    for (let i = 0; i < 400; i++) {
+      const dt = new Date(); dt.setDate(dt.getDate() - i);
+      const k = dt.toISOString().slice(0, 10);
+      const rec = store.stats.days[k];
+      if (rec && rec.words > 0) streak++;
+      else if (i > 0) break;
+    }
+    $('streakDays').textContent = streak;
+
+    const names = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
+    const bars = [];
+    let max = 1;
+    for (let i = 6; i >= 0; i--) {
+      const dt = new Date(); dt.setDate(dt.getDate() - i);
+      const k = dt.toISOString().slice(0, 10);
+      const v = (store.stats.days[k] || {}).words || 0;
+      max = Math.max(max, v);
+      bars.push({ k: k, v: v, lbl: names[dt.getDay()] });
+    }
+    $('chart').innerHTML = bars.map(b =>
+      '<div class="bar-wrap"><div class="bar' + (b.k === d ? ' today' : '') + '" style="height:' + ((b.v / max) * 100) + '%" title="' + b.v + ' kelime"></div><div class="lbl">' + b.lbl + '</div></div>'
+    ).join('');
+  }
+  goalInput.addEventListener('change', () => { renderStats(); saveNow(); });
+
+  /* ===== playback ===== */
+  function groupDuration(g) {
+    const wpm = parseInt(wpmSlider.value, 10);
+    const msPerWord = 60000 / wpm;
+    let ms = msPerWord * Math.max(1, g.e - g.s);
+    if (!smartOn()) return ms;
+    let factor = 1;
+    for (let i = g.s; i < g.e; i++) {
+      const len = words[i].replace(/[^\p{L}\p{N}]/gu, '').length;
+      if (len > 7) factor += (len - 7) * 0.035;
+    }
+    const last = words[g.e - 1] || '';
+    if (sentenceEnd(last)) factor += 0.5;
+    else if (/[,;:—–]["'”’)\]]?$/.test(last)) factor += 0.22;
+    return ms * factor;
+  }
+  function schedule() {
+    clearTimeout(playTimer);
+    playTimer = setTimeout(tick, groupDuration(groups[Math.min(gi, groups.length - 1)]));
+  }
+  function tick() {
+    if (gi >= groups.length - 1) { pause(); return; }
+    const prev = groups[gi];
+    const now = performance.now();
+    recordRead(prev.e - prev.s, lastTickTs ? now - lastTickTs : 0);
+    lastTickTs = now;
+    gi++;
+    renderGroup();
+    renderStats();
+    if (playing) schedule();
+  }
+  function play() {
+    if (!words.length) { loadWords(false); if (!words.length) return; }
+    if (gi >= groups.length - 1) gi = 0;
+    playing = true;
+    lastTickTs = performance.now();
+    playBtn.textContent = 'Durdur';
+    renderGroup();
+    schedule();
+  }
+  function pause() {
+    playing = false;
+    lastTickTs = 0;
+    playBtn.textContent = 'Başlat';
+    clearTimeout(playTimer);
+    playTimer = null;
+    saveNow();
+  }
+  const togglePlay = () => playing ? pause() : play();
+
+  function jumpToWord(w) {
+    if (!words.length) return;
+    w = Math.min(Math.max(0, w), words.length - 1);
+    gi = groupOfWord(w);
+    if (viewFollows) viewChunk = chunkOfWord(currentWord());
+    renderGroup();
+    saveNow();
+  }
+  const seekBy = d => { viewFollows = true; jumpToWord(currentWord() + d); };
+  const resetAll = () => { pause(); viewFollows = true; jumpToWord(0); };
+
+  /* ===== loading ===== */
+  function loadWords(keepPos) {
+    const prev = keepPos ? currentWord() : 0;
+    words = tokenize(textInput.value);
+    buildChunks();
+    buildGroups();
+    buildParagraphs();
+    gi = words.length ? groupOfWord(Math.min(prev, words.length - 1)) : 0;
+    const has = words.length > 0;
+    placeholder.style.display = has ? 'none' : 'block';
+    wordEl.style.display = has ? 'block' : 'none';
+    fp = has ? fingerprint(textInput.value) : null;
+    viewFollows = true;
+    viewChunk = chunkOfWord(currentWord());
+    renderedChunk = -1;
+    renderGroup();
+    if (followMode) { renderFollow(); renderBookmarks(); }
+    if (uiMode === 'preview') renderPreview();
+  }
+
+  async function setImportedText(text, title, starts) {
+    pause();
+    pageStarts = starts && starts.length ? starts : null;
+    textInput.value = text.trim();
+    docTitle = title || text.trim().split(/\s+/).slice(0, 5).join(' ');
+    marks = [];
+    loadWords(false);
+    await saveBookText();
+    const known = fp && store.library[fp];
+    if (known && known.pos > 0 && known.pos < words.length - 1) {
+      marks = known.marks || [];
+      jumpToWord(known.pos);
+      showResume(known.pos);
+    } else hideResume();
+    renderBookmarks();
+    saveNow();
+    renderLibrary();
+  }
+
+  function showResume(pos) {
+    const pct = words.length ? Math.round((pos / words.length) * 100) : 0;
+    const pg = pageOfWord(pos);
+    $('resumeText').textContent = 'Kaldığın yerden devam ediyorsun: %' + pct + (pg ? ' · ' + unitName + ' ' + pg : '') + ' — ' + (docTitle || 'metin');
+    resumeBanner.style.display = 'flex';
+  }
+  const hideResume = () => { resumeBanner.style.display = 'none'; };
+  $('bannerOkBtn').addEventListener('click', hideResume);
+  $('restartBtn').addEventListener('click', () => { hideResume(); resetAll(); });
+
+  /* ===== library ===== */
+  function renderLibrary() {
+    const entries = Object.entries(store.library).sort((a, b) => (b[1].ts || 0) - (a[1].ts || 0));
+    if (!entries.length) { libList.innerHTML = '<div class="empty-note">Kitaplık boş. Bir dosya içe aktardığında burada listelenir.</div>'; return; }
+    libList.innerHTML = '';
+    entries.forEach(([key, rec]) => {
+      const row = document.createElement('div');
+      row.className = 'lib-item' + (key === fp ? ' current' : '');
+      const pct = rec.total ? Math.round((rec.pos / rec.total) * 100) : 0;
+      const label = document.createElement('span');
+      label.className = 't';
+      label.title = rec.title || '';
+      label.textContent = (rec.title || 'Adsız metin') + ' — ' + rec.total + ' kelime' + (rec.pages ? ' · ' + rec.pages + ' sayfa' : '');
+      label.addEventListener('click', () => openBook(key));
+      const pctEl = document.createElement('span');
+      pctEl.className = 'pct';
+      pctEl.textContent = '%' + pct;
+      const del = document.createElement('button');
+      del.textContent = '×'; del.title = 'Kitaplıktan sil';
+      del.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        delete store.library[key];
+        await idbDel(key);
+        saveNow(); renderLibrary();
+      });
+      row.appendChild(label); row.appendChild(pctEl); row.appendChild(del);
+      libList.appendChild(row);
+    });
+  }
+
+  async function openBook(key) {
+    const rec = await loadBookText(key);
+    const meta = store.library[key];
+    if (!rec || !rec.text) {
+      setStatus('Bu kitabın metni kayıtlı değil, dosyayı yeniden içe aktarman gerekiyor.', 'err');
+      return;
+    }
+    pause();
+    pageStarts = rec.pageStarts || null;
+    textInput.value = rec.text;
+    docTitle = (meta && meta.title) || '';
+    marks = (meta && meta.marks) || [];
+    unitName = (meta && meta.unit) || 'Sayfa';
+    loadWords(false);
+    if (meta && meta.pos > 0 && meta.pos < words.length - 1) { jumpToWord(meta.pos); showResume(meta.pos); }
+    else hideResume();
+    renderBookmarks(); renderLibrary(); saveNow();
+    setMode(true);
+  }
+
+  /* ===== cihazlar arası taşıma: yedek al / yükle ===== */
+  function setBackupStatus(msg, kind) {
+    const el = $('backupStatus');
+    el.textContent = msg;
+    el.className = 'import-status' + (kind ? ' ' + kind : '');
+  }
+
+  $('exportBtn').addEventListener('click', async () => {
+    try {
+      setBackupStatus('Yedek hazırlanıyor...', 'busy');
+      saveNow();
+      const data = { app: 'speedreader', v: 6, ts: Date.now(), settings: store.settings, library: store.library, stats: store.stats, lastFp: store.lastFp, books: [] };
+      for (const key of Object.keys(store.library || {})) {
+        const rec = await loadBookText(key);
+        if (rec && rec.text) data.books.push({ fp: key, text: rec.text, pageStarts: rec.pageStarts || null });
+      }
+      const json = JSON.stringify(data);
+      const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'hizli-okuma-yedek-' + new Date().toISOString().slice(0, 10) + '.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      setBackupStatus('Yedek indirildi · ' + data.books.length + ' kitap · ' + (json.length / 1048576).toFixed(1) + ' MB', 'ok');
+    } catch (err) { setBackupStatus('Yedek alınamadı: ' + err.message, 'err'); }
+  });
+
+  $('importBtn').addEventListener('click', () => $('backupInput').click());
+  $('backupInput').addEventListener('change', async () => {
+    const file = $('backupInput').files[0];
+    $('backupInput').value = '';
+    if (!file) return;
+    try {
+      setBackupStatus('Yedek okunuyor...', 'busy');
+      const data = JSON.parse(await file.text());
+      if (!data || data.app !== 'speedreader') throw new Error('bu dosya bir Hızlı Okuma yedeği değil');
+      pause();
+      for (const b of (data.books || [])) {
+        if (b && b.fp && b.text) await idbPut({ fp: b.fp, text: b.text, pageStarts: b.pageStarts || null });
+      }
+      // aynı kitap iki cihazda da okunduysa en son güncellenen konum kazanır
+      store.library = store.library || {};
+      Object.keys(data.library || {}).forEach(k => {
+        const incoming = data.library[k], current = store.library[k];
+        if (!current || (incoming.ts || 0) > (current.ts || 0)) store.library[k] = incoming;
+      });
+      if (data.stats) store.stats = data.stats;
+      if (data.settings) { applySettings(data.settings); syncUi(); }
+      // hedefi saveNow'dan önce belirle: saveNow, lastFp'yi o an açık olan kitaba çeker
+      const target = (data.lastFp && store.library[data.lastFp]) ? data.lastFp : null;
+      renderLibrary();
+      renderStats();
+      if (target) await openBook(target); else saveNow();
+      setBackupStatus('Yedek yüklendi · ' + (data.books || []).length + ' kitap aktarıldı'
+        + (target ? ', kaldığın yerden açıldı.' : '.'), 'ok');
+    } catch (err) { setBackupStatus('Yedek yüklenemedi: ' + err.message, 'err'); }
+  });
+
+  $('libClearBtn').addEventListener('click', async () => {
+    const keys = Object.keys(store.library);
+    for (const k of keys) await idbDel(k);
+    store.library = {};
+    saveNow(); renderLibrary();
+  });
+
+  /* ===== quiz ===== */
+  const STOP = new Set(('ve veya ama fakat çünkü için gibi daha çok az ile bu şu bir birkaç her hangi ne nasıl kadar sonra önce ise değil olarak olan olup ancak yani hem oldu olduğu bunu şey diye göre ortaya'.split(' ')));
+  function quizRange() {
+    const mode = $('quizRange').value;
+    const cur = currentWord();
+    if (mode === 'chunk') { const c = chunks[chunkOfWord(cur)]; return { s: c.s, e: c.e }; }
+    if (mode === 'all') return { s: 0, e: Math.max(1, cur) };
+    return { s: Math.max(0, cur - 300), e: Math.max(1, cur) };
+  }
+  function buildQuiz() {
+    const r = quizRange();
+    const pool = [];
+    for (let i = r.s; i < r.e; i++) {
+      const clean = words[i].replace(/[^\p{L}\p{N}]/gu, '');
+      if (clean.length >= 5 && !STOP.has(clean.toLocaleLowerCase('tr'))) pool.push({ i: i, clean: clean });
+    }
+    const area = $('quizArea');
+    if (pool.length < 8) {
+      area.innerHTML = '<div class="empty-note">Soru üretmek için yeterli metin okunmamış. Biraz daha oku ya da farklı bir bölüm seç.</div>';
+      return;
+    }
+    const n = Math.min(parseInt($('quizCount').value, 10), Math.floor(pool.length / 2));
+    const picked = [];
+    const used = new Set();
+    while (picked.length < n && used.size < pool.length) {
+      const c = pool[Math.floor(Math.random() * pool.length)];
+      if (used.has(c.i)) continue;
+      used.add(c.i);
+      picked.push(c);
+    }
+    picked.sort((a, b) => a.i - b.i);
+    area.innerHTML = '';
+    let answered = 0, correct = 0;
+    picked.forEach((q, qi) => {
+      const ctxS = Math.max(r.s, q.i - 7), ctxE = Math.min(r.e, q.i + 8);
+      const parts = [];
+      for (let i = ctxS; i < ctxE; i++) {
+        parts.push(i === q.i ? '<span class="quiz-blank">_____</span>' : escapeHtml(words[i]));
+      }
+      const opts = [q.clean];
+      let guard = 0;
+      while (opts.length < 4 && guard++ < 200) {
+        const cand = pool[Math.floor(Math.random() * pool.length)].clean;
+        if (!opts.includes(cand) && Math.abs(cand.length - q.clean.length) <= 4) opts.push(cand);
+      }
+      for (let i = opts.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [opts[i], opts[j]] = [opts[j], opts[i]]; }
+
+      const box = document.createElement('div');
+      box.className = 'quiz-q';
+      const txt = document.createElement('div');
+      txt.className = 'quiz-text';
+      txt.innerHTML = (qi + 1) + '. … ' + parts.join(' ') + ' …';
+      const optRow = document.createElement('div');
+      optRow.className = 'quiz-opts';
+      opts.forEach(o => {
+        const b = document.createElement('button');
+        b.className = 'quiz-opt';
+        b.textContent = o;
+        b.addEventListener('click', () => {
+          if (box.dataset.done) return;
+          box.dataset.done = '1';
+          answered++;
+          const ok = o === q.clean;
+          if (ok) correct++;
+          b.classList.add(ok ? 'correct' : 'wrong');
+          if (!ok) Array.from(optRow.children).forEach(c => { if (c.textContent === q.clean) c.classList.add('correct'); });
+          if (answered === picked.length) {
+            // etkili okuma hızı = ham hız × anlama oranı (okuma araştırmalarında kullanılan ölçü)
+            const rate = correct / picked.length;
+            const wpm = parseInt(wpmSlider.value, 10);
+            const sc = document.createElement('div');
+            sc.className = 'quiz-score';
+            sc.textContent = 'Sonuç: ' + correct + ' / ' + picked.length + ' doğru (%' + Math.round(rate * 100)
+              + ') · Etkili okuma hızı ≈ ' + Math.round(wpm * rate) + ' wpm';
+            const tip = document.createElement('div');
+            tip.className = 'hint';
+            tip.textContent = rate >= 0.8
+              ? 'Anlama iyi görünüyor; hızı kademeli olarak (20–40 wpm) artırmayı deneyebilirsin.'
+              : rate >= 0.6
+                ? 'Sınırdasın. Bu hızda biraz daha pratik yap, sonra artırmayı düşün.'
+                : 'Anlama düşük. Hızı düşür ya da kelime grubunu 1 yap — etkili okuma hızı ham hızdan daha önemlidir.';
+            area.appendChild(sc); area.appendChild(tip);
+          }
+        });
+        optRow.appendChild(b);
+      });
+      box.appendChild(txt); box.appendChild(optRow);
+      area.appendChild(box);
+    });
+  }
+  $('quizCount').addEventListener('input', () => $('quizCountValue').textContent = $('quizCount').value);
+  $('quizStart').addEventListener('click', buildQuiz);
+
+  /* ===== import ===== */
+  const dropZone = $('dropZone'), fileInput = $('fileInput');
+  function setStatus(msg, kind) {
+    importStatus.textContent = msg;
+    importStatus.className = 'import-status' + (kind ? ' ' + kind : '');
+  }
+  async function extractPdfPages(buf, onProgress) {
+    const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+    const pages = [];
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      pages.push(content.items.map(it => it.str).join(' '));
+      if (onProgress && (i % 10 === 0 || i === pdf.numPages)) onProgress(i, pdf.numPages);
+    }
+    return pages;
+  }
+  // EPUB = içinde XHTML bölümleri olan bir zip arşivi.
+  // container.xml -> OPF dosyası -> spine (okuma sırası) -> her bölümün metni
+  async function extractEpubChapters(arrayBuffer, onProgress) {
+    const zip = await window.JSZip.loadAsync(arrayBuffer);
+    const containerFile = zip.file('META-INF/container.xml');
+    if (!containerFile) throw new Error('geçerli bir epub değil (container.xml yok)');
+    const parser = new DOMParser();
+    const container = parser.parseFromString(await containerFile.async('string'), 'application/xml');
+    const rootfile = container.querySelector('rootfile');
+    const opfPath = rootfile && rootfile.getAttribute('full-path');
+    if (!opfPath) throw new Error('içindekiler dosyası bulunamadı');
+
+    const opf = parser.parseFromString(await zip.file(opfPath).async('string'), 'application/xml');
+    const base = opfPath.includes('/') ? opfPath.slice(0, opfPath.lastIndexOf('/') + 1) : '';
+    const manifest = {};
+    opf.querySelectorAll('manifest > item').forEach(it => {
+      manifest[it.getAttribute('id')] = it.getAttribute('href');
+    });
+    const order = Array.from(opf.querySelectorAll('spine > itemref'))
+      .map(ir => manifest[ir.getAttribute('idref')])
+      .filter(Boolean);
+
+    const chapters = [];
+    for (let i = 0; i < order.length; i++) {
+      const file = zip.file(base + decodeURIComponent(order[i]));
+      if (!file) continue;
+      const raw = await file.async('string');
+      let doc = parser.parseFromString(raw, 'application/xhtml+xml');
+      if (doc.querySelector('parsererror')) doc = parser.parseFromString(raw, 'text/html');
+      doc.querySelectorAll('script, style').forEach(el => el.remove());
+      // blok elemanların metni textContent'te bitişik çıkar; aralarına satır sonu koy
+      doc.querySelectorAll('p, div, br, li, tr, blockquote, section, article, h1, h2, h3, h4, h5, h6')
+        .forEach(el => { try { el.insertAdjacentText('afterend', '\n'); } catch (e) {} });
+      const text = ((doc.body || doc.documentElement).textContent || '')
+        .replace(/[ \t\r\f\v]+/g, ' ')
+        .replace(/\s*\n\s*/g, '\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+      if (text) chapters.push(text);
+      if (onProgress && (i % 5 === 0 || i === order.length - 1)) onProgress(i + 1, order.length);
+    }
+    if (!chapters.length) throw new Error('metin bulunamadı');
+
+    const title = (opf.querySelector('metadata > title') || {}).textContent || '';
+    return { chapters: chapters, title: title.trim() };
+  }
+
+  function pagesToStarts(pages) {
+    const starts = [];
+    let count = 0;
+    pages.forEach(p => { starts.push(count); count += tokenize(p).length; });
+    return starts;
+  }
+  function handleFile(file) {
+    const name = file.name.toLowerCase();
+    setStatus('"' + file.name + '" okunuyor...', 'busy');
+    const reader = new FileReader();
+    if (name.endsWith('.pdf')) {
+      reader.onload = async e => {
+        try {
+          const pages = await extractPdfPages(e.target.result, (i, n) => setStatus('PDF okunuyor... ' + i + ' / ' + n + ' sayfa', 'busy'));
+          const text = pages.join('\n\n');
+          if (!text.trim()) throw new Error('metin bulunamadı (taranmış görsel PDF olabilir)');
+          unitName = 'Sayfa';
+          await setImportedText(text, file.name, pagesToStarts(pages));
+          setStatus('"' + file.name + '" aktarıldı · ' + pages.length + ' sayfa · ' + words.length + ' kelime.', 'ok');
+          setMode(true);
+        } catch (err) { setStatus('PDF okunamadı: ' + err.message, 'err'); }
+      };
+      reader.onerror = () => setStatus('Dosya okunamadı.', 'err');
+      reader.readAsArrayBuffer(file);
+    } else if (name.endsWith('.epub')) {
+      reader.onload = async e => {
+        try {
+          const res = await extractEpubChapters(e.target.result, (i, n) => setStatus('EPUB okunuyor... ' + i + ' / ' + n + ' bölüm', 'busy'));
+          unitName = 'Bölüm';
+          await setImportedText(res.chapters.join('\n\n'), res.title || file.name, pagesToStarts(res.chapters));
+          setStatus('"' + (res.title || file.name) + '" aktarıldı · ' + res.chapters.length + ' bölüm · ' + words.length + ' kelime.', 'ok');
+          setMode(true);
+        } catch (err) { setStatus('EPUB okunamadı: ' + err.message, 'err'); }
+      };
+      reader.onerror = () => setStatus('Dosya okunamadı.', 'err');
+      reader.readAsArrayBuffer(file);
+    } else if (name.endsWith('.docx')) {
+      reader.onload = async e => {
+        try {
+          const result = await window.mammoth.extractRawText({ arrayBuffer: e.target.result });
+          unitName = 'Sayfa';
+          await setImportedText(result.value, file.name, null);
+          setStatus('"' + file.name + '" aktarıldı · ' + words.length + ' kelime.', 'ok');
+          setMode(true);
+        } catch (err) { setStatus('DOCX okunamadı: ' + err.message, 'err'); }
+      };
+      reader.onerror = () => setStatus('Dosya okunamadı.', 'err');
+      reader.readAsArrayBuffer(file);
+    } else if (name.endsWith('.txt') || name.endsWith('.md')) {
+      reader.onload = async e => {
+        await setImportedText(e.target.result, file.name, null);
+        setStatus('"' + file.name + '" aktarıldı · ' + words.length + ' kelime.', 'ok');
+        setMode(true);
+      };
+      reader.onerror = () => setStatus('Dosya okunamadı.', 'err');
+      reader.readAsText(file, 'utf-8');
+    } else {
+      setStatus('Desteklenmeyen dosya türü. Lütfen .txt, .md, .pdf ya da .docx kullan.', 'err');
+    }
+  }
+  dropZone.addEventListener('click', () => fileInput.click());
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag');
+    const file = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+  $('pickFileBtn').addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    if (file) handleFile(file);
+    fileInput.value = '';
+  });
+  $('clipboardBtn').addEventListener('click', async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text.trim()) { setStatus('Pano boş görünüyor.', 'err'); return; }
+      await setImportedText(text, 'Pano metni', null);
+      setStatus('Pano içeriği aktarıldı · ' + words.length + ' kelime.', 'ok');
+    } catch (err) {
+      setStatus('Panoya erişilemedi (tarayıcı izni gerekli). Metin kutusuna Ctrl+V ile yapıştırabilirsin.', 'err');
+    }
+  });
+  $('clearTextBtn').addEventListener('click', () => {
+    pause();
+    textInput.value = ''; pageStarts = null; marks = []; docTitle = '';
+    loadWords(false); renderBookmarks(); hideResume();
+    setStatus('Metin temizlendi.', '');
+  });
+
+  let editTimer = null;
+  textInput.addEventListener('input', () => {
+    pause();
+    pageStarts = null; marks = [];
+    docTitle = textInput.value.trim().split(/\s+/).slice(0, 5).join(' ');
+    loadWords(false);
+    hideResume();
+    clearTimeout(editTimer);
+    editTimer = setTimeout(async () => { await saveBookText(); saveNow(); renderLibrary(); }, 1000);
+  });
+
+  /* ===== controls ===== */
+  playBtn.addEventListener('click', togglePlay);
+  $('resetBtn').addEventListener('click', resetAll);
+  $('backBtn').addEventListener('click', () => seekBy(-10));
+  $('fwdBtn').addEventListener('click', () => seekBy(10));
+  $('bookmarkBtn').addEventListener('click', addBookmark);
+  display.addEventListener('click', () => {
+    // kontroller sönmüşken ilk dokunuş onları geri getirsin, okumayı durdurmasın
+    if (stage.classList.contains('idle')) { wakeControls(); return; }
+    togglePlay();
+  });
+
+  function currentFontPx() { return isImmersive() ? parseInt(fsFontSlider.value, 10) : parseInt(fontSlider.value, 10); }
+  function applyFont() { fitWordToDisplay(); applyWordTransform(); }
+  function bumpFont(delta) {
+    const el = isImmersive() ? fsFontSlider : fontSlider;
+    el.value = Math.min(parseInt(el.max, 10), Math.max(parseInt(el.min, 10), parseInt(el.value, 10) + delta));
+    el.dispatchEvent(new Event('input'));
+  }
+
+  /* tam ekranda da çalışan hızlı ayar çubuğu */
+  function stageBarSync() {
+    $('sbWpm').textContent = wpmSlider.value;
+    $('sbGrp').textContent = groupSlider.value;
+    $('sbFont').textContent = currentFontPx();
+    $('sbAlign').value = alignSelect.value;
+  }
+  $('stageBar').addEventListener('click', e => {
+    const act = e.target.dataset && e.target.dataset.act;
+    if (!act) return;
+    if (act === 'wpm-' || act === 'wpm+') {
+      wpmSlider.value = Math.min(1200, Math.max(60, +wpmSlider.value + (act === 'wpm+' ? 20 : -20)));
+      wpmSlider.dispatchEvent(new Event('input'));
+    } else if (act === 'grp-' || act === 'grp+') {
+      groupSlider.value = Math.min(6, Math.max(1, +groupSlider.value + (act === 'grp+' ? 1 : -1)));
+      groupSlider.dispatchEvent(new Event('input'));
+    } else if (act === 'font-' || act === 'font+') {
+      bumpFont(act === 'font+' ? 4 : -4);
+    }
+  });
+  $('sbAlign').addEventListener('change', () => {
+    alignSelect.value = $('sbAlign').value;
+    alignSelect.dispatchEvent(new Event('change'));
+  });
+
+  // tam ekranda fare durunca kontroller sönsün, kıpırdayınca geri gelsin
+  let idleTimer = null;
+  function wakeControls() {
+    stage.classList.remove('idle');
+    clearTimeout(idleTimer);
+    if (isImmersive()) idleTimer = setTimeout(() => stage.classList.add('idle'), 2800);
+  }
+  stage.addEventListener('mousemove', wakeControls);
+  stage.addEventListener('touchstart', wakeControls, { passive: true });
+
+  function onImmersiveChange() {
+    applyFont(); stageBarSync(); wakeControls();
+    if (!isImmersive()) { stage.classList.remove('idle'); clearTimeout(idleTimer); }
+    setTimeout(applyWordTransform, 80);
+  }
+  function setCssImmersive(on) {
+    cssImmersive = on;
+    stage.classList.toggle('css-immersive', on);
+    document.body.classList.toggle('immersive-open', on);
+    onImmersiveChange();
+  }
+  function enterImmersive() {
+    // Önce gerçek tam ekranı dene (masaüstü, Android Chrome); desteklenmiyorsa
+    // ya da reddedilirse CSS tabanlı moda düş (iOS Safari / iOS Chrome).
+    if (stage.requestFullscreen) {
+      Promise.resolve(stage.requestFullscreen()).catch(() => setCssImmersive(true));
+    } else {
+      setCssImmersive(true);
+    }
+  }
+  function exitImmersive() {
+    if (document.fullscreenElement && document.exitFullscreen) {
+      Promise.resolve(document.exitFullscreen()).catch(() => {});
+    }
+    if (cssImmersive) setCssImmersive(false);
+  }
+  $('fsBtn').addEventListener('click', () => { isImmersive() ? exitImmersive() : enterImmersive(); });
+  document.addEventListener('fullscreenchange', onImmersiveChange);
+
+  wpmSlider.addEventListener('input', () => { $('wpmValue').textContent = wpmSlider.value; updateProgress(); stageBarSync(); saveSoon(); });
+  groupSlider.addEventListener('input', () => {
+    $('groupValue').textContent = groupSlider.value;
+    const w = currentWord();
+    buildGroups(); gi = groupOfWord(w);
+    renderGroup(); updateAlignHint(); stageBarSync(); saveSoon();
+  });
+  fontSlider.addEventListener('input', () => { $('fontValue').textContent = fontSlider.value; applyFont(); stageBarSync(); saveSoon(); });
+  fsFontSlider.addEventListener('input', () => { $('fsFontValue').textContent = fsFontSlider.value; applyFont(); stageBarSync(); saveSoon(); });
+  orpSelect.addEventListener('change', () => { display.classList.toggle('orp-on', orpSelect.value === 'on'); saveSoon(); });
+  smartSelect.addEventListener('change', () => {
+    const w = currentWord();
+    buildGroups(); gi = groupOfWord(w);
+    renderGroup(); saveSoon();
+  });
+  function updateAlignHint() {
+    const multi = groupSize() > 1;
+    const mode = alignSelect.value;
+    const el = $('alignHint');
+    let msg, warn = false;
+    if (mode === 'focus') {
+      msg = multi
+        ? 'Grup halinde okurken yalnızca ilk kelimenin odak harfi sabit kalır, yanındaki kelimeler uzunluklarına göre kayar. Tüm grubun sabit durmasını istiyorsan "Soldan sabitle" seç.'
+        : 'Odak harfi hep aynı noktada kalır, gözün satır boyunca hiç kaymaz. Tek kelimeli okuma için en iyi seçenek.';
+      warn = multi;
+    } else if (mode === 'left') {
+      msg = 'Grubun sol kenarı hep aynı noktada başlar. Çok kelimeli okumada en kararlı seçenek budur.';
+    } else {
+      msg = multi
+        ? 'Gruplar ortalandığı için kelimeler her adımda sağa sola kayar. Kaymayı istemiyorsan "Soldan sabitle" dene.'
+        : 'Her kelime ekranın ortasına hizalanır.';
+    }
+    el.textContent = msg;
+    el.style.color = warn ? 'var(--accent-2)' : 'var(--muted)';
+  }
+
+  alignSelect.addEventListener('change', () => {
+    display.classList.toggle('show-anchor', alignSelect.value !== 'center');
+    applyWordTransform(); updateAlignHint(); stageBarSync(); saveSoon();
+  });
+  offsetSlider.addEventListener('input', () => { $('offsetValue').textContent = offsetSlider.value; applyWordTransform(); saveSoon(); });
+  hoffsetSlider.addEventListener('input', () => { $('hoffsetValue').textContent = hoffsetSlider.value; applyWordTransform(); saveSoon(); });
+  heightSlider.addEventListener('input', () => { $('heightValue').textContent = heightSlider.value; display.style.height = heightSlider.value + 'px'; applyWordTransform(); saveSoon(); });
+  themeSelect.addEventListener('change', () => { document.documentElement.setAttribute('data-theme', themeSelect.value); saveSoon(); });
+  guideSelect.addEventListener('change', () => {
+    const show = guideSelect.value === 'on';
+    document.querySelectorAll('.guide-line').forEach(g => g.style.display = show ? 'block' : 'none');
+    saveSoon();
+  });
+  memorySelect.addEventListener('change', () => {
+    if (memorySelect.value === 'off') { lsDel(K_STATE); lsDel(K_TEXT); }
+    else { saveBookText(); saveNow(); }
+  });
+
+  progressBar.addEventListener('click', e => {
+    if (!words.length) return;
+    const rect = progressBar.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    viewFollows = true;
+    jumpToWord(Math.floor(ratio * words.length));
+  });
+
+  document.addEventListener('keydown', e => {
+    const tag = (document.activeElement && document.activeElement.tagName) || '';
+    if (tag === 'TEXTAREA' || tag === 'INPUT' || tag === 'SELECT') return;
+    if (!$('tab-reader').classList.contains('active')) return;
+    if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+    else if (e.code === 'ArrowRight') { e.preventDefault(); seekBy(10); }
+    else if (e.code === 'ArrowLeft') { e.preventDefault(); seekBy(-10); }
+    else if (e.code === 'ArrowUp') { e.preventDefault(); wpmSlider.value = Math.min(1200, +wpmSlider.value + 20); wpmSlider.dispatchEvent(new Event('input')); }
+    else if (e.code === 'ArrowDown') { e.preventDefault(); wpmSlider.value = Math.max(60, +wpmSlider.value - 20); wpmSlider.dispatchEvent(new Event('input')); }
+    else if (e.key === '+' || e.key === '=') { e.preventDefault(); bumpFont(4); }
+    else if (e.key === '-' || e.key === '_') { e.preventDefault(); bumpFont(-4); }
+    else if (e.key.toLowerCase() === 'r') resetAll();
+    else if (e.key.toLowerCase() === 'b') addBookmark();
+    else if (e.key.toLowerCase() === 'f') $('fsBtn').click();
+    else if (e.code === 'Escape' && cssImmersive) { e.preventDefault(); exitImmersive(); }
+  });
+
+  window.addEventListener('beforeunload', saveNow);
+  document.addEventListener('visibilitychange', () => { if (document.hidden && playing) pause(); });
+
+  /* ===== init ===== */
+  function applySettings(s) {
+    if (!s) return;
+    const set = (el, v) => { if (v !== undefined && v !== null) el.value = v; };
+    set(wpmSlider, s.wpm); set(groupSlider, s.group); set(fontSlider, s.font);
+    set(orpSelect, s.orp); set(smartSelect, s.smart); set(alignSelect, s.align);
+    set(offsetSlider, s.offset); set(hoffsetSlider, s.hoffset); set(heightSlider, s.height);
+    set(fsFontSlider, s.fsFont); set(themeSelect, s.theme); set(guideSelect, s.guides); set(memorySelect, s.memory);
+    set($('exSize'), s.exSize); set($('dotSize'), s.dotSize); set($('dotMode'), s.dotMode);
+  }
+  function syncUi() {
+    $('wpmValue').textContent = wpmSlider.value;
+    $('groupValue').textContent = groupSlider.value;
+    $('fontValue').textContent = fontSlider.value;
+    $('offsetValue').textContent = offsetSlider.value;
+    $('hoffsetValue').textContent = hoffsetSlider.value;
+    $('heightValue').textContent = heightSlider.value;
+    $('fsFontValue').textContent = fsFontSlider.value;
+    $('quizCountValue').textContent = $('quizCount').value;
+    display.style.height = heightSlider.value + 'px';
+    display.classList.toggle('orp-on', orpSelect.value === 'on');
+    display.classList.toggle('show-anchor', alignSelect.value !== 'center');
+    document.documentElement.setAttribute('data-theme', themeSelect.value);
+    const showGuides = guideSelect.value === 'on';
+    document.querySelectorAll('.guide-line').forEach(g => g.style.display = showGuides ? 'block' : 'none');
+    wordEl.style.fontSize = fontSlider.value + 'px';
+    updateAlignHint();
+    stageBarSync();
+    applyExSize();
+  }
+
+  (async function init() {
+    loadStore();
+    applySettings(store.settings);
+    goalInput.value = (store.stats && store.stats.goal) || 2000;
+    syncUi();
+
+    if (!storageAvailable()) {
+      memorySelect.value = 'off';
+      memorySelect.disabled = true;
+      const note = document.createElement('div');
+      note.className = 'hint';
+      note.textContent = 'Tarayıcı deposu bu ortamda kapalı, kaldığın yer hatırlanamıyor. Dosyayı doğrudan tarayıcıda açarsan çalışır.';
+      memorySelect.parentElement.appendChild(note);
+    }
+
+    let restored = false;
+    if (memoryOn() && store.lastFp) {
+      const rec = await loadBookText(store.lastFp);
+      const meta = store.library[store.lastFp];
+      if (rec && rec.text) {
+        textInput.value = rec.text;
+        pageStarts = rec.pageStarts || null;
+        docTitle = (meta && meta.title) || '';
+        marks = (meta && meta.marks) || [];
+        unitName = (meta && meta.unit) || 'Sayfa';
+        loadWords(false);
+        if (meta && meta.pos > 0 && meta.pos < words.length - 1) { jumpToWord(meta.pos); showResume(meta.pos); }
+        restored = true;
+      }
+    }
+    if (!restored) loadWords(false);
+
+    renderBookmarks();
+    renderLibrary();
+    renderStats();
+    if (store.settings && (store.settings.mode === 'follow' || store.settings.mode === 'preview')) setMode(store.settings.mode);
+  })();
+
+  /* ===== EYE EXERCISES ===== */
+  document.querySelectorAll('.ex-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.ex-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.ex-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      $('ex-' + btn.dataset.ex).classList.add('active');
+      dotStop(); flashStop(); growStop();
+    });
+  });
+
+  /* --- çalışma alanı boyutu (dört egzersiz de --ex-h değişkenini kullanır) --- */
+  function applyExSize() {
+    const el = $('exSize');
+    document.documentElement.style.setProperty('--ex-h', el.value + 'px');
+    $('exSizeValue').textContent = el.value;
+  }
+  $('exSize').addEventListener('input', () => { applyExSize(); saveSoon(); });
+  $('exFsBtn').addEventListener('click', () => {
+    if (document.fullscreenElement) { document.exitFullscreen(); return; }
+    const panel = document.querySelector('.ex-panel.active .ex-stage');
+    if (panel && panel.requestFullscreen) Promise.resolve(panel.requestFullscreen()).catch(() => {});
+  });
+
+  /* --- nokta takibi --- */
+  const dotTrack = $('dotTrack'), dotEl = $('dotEl'), dotPattern = $('dotPattern');
+  const dotSpeed = $('dotSpeed'), dotMode = $('dotMode'), dotDwell = $('dotDwell'), dotSize = $('dotSize');
+  let dotRAF = null, dotT0 = null, dotPlaying = false;
+  let sacTimer = null, sacPhase = 0, sacStep = 0;
+  const SACCADE_STEPS = 8;
+
+  // deseni tek bir yerden hesapla; hem kesintisiz hem sıçramalı mod bunu kullanır
+  function patternPos(t, period, w, h) {
+    const ax = w / 2 - 30, ay = h / 2 - 30, omega = (2 * Math.PI) / period;
+    const p = dotPattern.value;
+    let x = w / 2, y = h / 2;
+    if (p === 'horizontal') x = w / 2 + ax * Math.sin(omega * t);
+    else if (p === 'vertical') y = h / 2 + ay * Math.sin(omega * t);
+    else if (p === 'circular') { x = w / 2 + ax * Math.cos(omega * t); y = h / 2 + ay * Math.sin(omega * t); }
+    else if (p === 'infinity') { x = w / 2 + ax * Math.sin(omega * t); y = h / 2 + ay * Math.sin(omega * t) * Math.cos(omega * t); }
+    else if (p === 'zigzag') {
+      const tri = v => (2 / Math.PI) * Math.asin(Math.sin(v));
+      x = w / 2 + ax * tri(omega * t); y = h / 2 + ay * tri(omega * t / 4);
+    }
+    return { x: x, y: y };
+  }
+
+  function placeDot(pos) { dotEl.style.left = pos.x + 'px'; dotEl.style.top = pos.y + 'px'; }
+
+  function updateDotNote() {
+    const note = $('dotSpeedNote');
+    const saccade = dotMode.value === 'saccade';
+    $('pursuitField').style.display = saccade ? 'none' : 'block';
+    $('saccadeField').style.display = saccade ? 'block' : 'none';
+    if (saccade) {
+      note.className = 'speed-note';
+      note.textContent = 'Sıçrama modu: nokta her adımda yeni bir konumda beliriyor. Göz bir hedeften diğerine atlayarak çalışır — bulanıklık oluşmaz.';
+      return;
+    }
+    const period = parseFloat(dotSpeed.value);
+    const amp = dotTrack.clientWidth / 2 - 30;
+    const pxPerSec = Math.round(amp * (2 * Math.PI) / period);
+    const tooFast = pxPerSec > 600;
+    note.className = 'speed-note' + (tooFast ? ' warn' : '');
+    note.textContent = 'Noktanın tepe hızı ≈ ' + pxPerSec + ' px/sn. '
+      + (tooFast
+        ? 'Bu hızda göz düzgün takibi sürdüremez; istemsiz yakalama sıçramalarına geçer ve nokta bulanık/hipnotik görünür. Süreyi uzat ya da "Sıçrama" moduna geç.'
+        : 'Takip edilebilir aralıkta.');
+  }
+
+  dotSpeed.addEventListener('input', () => { $('dotSpeedValue').textContent = dotSpeed.value; updateDotNote(); });
+  dotDwell.addEventListener('input', () => { $('dotDwellValue').textContent = dotDwell.value; });
+  dotMode.addEventListener('change', () => { dotStop(); updateDotNote(); });
+  dotPattern.addEventListener('change', updateDotNote);
+  dotSize.addEventListener('input', () => {
+    $('dotSizeValue').textContent = dotSize.value;
+    document.documentElement.style.setProperty('--dot-size', dotSize.value + 'px');
+  });
+
+  function dotFrame(ts) {
+    if (!dotT0) dotT0 = ts;
+    placeDot(patternPos((ts - dotT0) / 1000, parseFloat(dotSpeed.value), dotTrack.clientWidth, dotTrack.clientHeight));
+    if (dotPlaying) dotRAF = requestAnimationFrame(dotFrame);
+  }
+
+  // Sıçrama modunda noktanın bir sonraki duracağı yeri seçer.
+  // phase: desen döngüsü içindeki şu anki konum (0..1 arası), stepIndex: başlangıçtan beri kaçıncı sıçrama.
+  // Dönüş: bir sonraki phase değeri (0..1).
+  function nextSaccadePhase(phase, stepIndex) {
+    // İlk adımlarda mesafe kısa tutulup göz ısıtılır, sonra kademeli olarak açılır.
+    const warmup = Math.min(1, (stepIndex + 1) / 12);
+    const minJump = 0.12 + 0.18 * warmup;
+    const jump = minJump + Math.random() * 0.25;
+    // yön de rastgele: göz sıradaki hedefi ezberleyemesin
+    return phase + (Math.random() < 0.5 ? -jump : jump);
+  }
+
+  function sacTick() {
+    if (!dotPlaying) return;
+    const period = 4;
+    const w = dotTrack.clientWidth, h = dotTrack.clientHeight;
+    const here = patternPos(sacPhase * period, period, w, h);
+    // Strateji fonksiyonu fazı seçer; buradaki kontrol sıçramanın ekranda da
+    // yeterince uzağa düştüğünü garantiler (desenin yavaş bölgelerinde faz
+    // uzaklığı piksel uzaklığı anlamına gelmiyor).
+    const minDist = Math.max(60, Math.min(w, h) * 0.25);
+    let best = null, bestDist = -1;
+    for (let attempt = 0; attempt < 6; attempt++) {
+      const raw = nextSaccadePhase(sacPhase, sacStep);
+      const ph = (typeof raw === 'number' && isFinite(raw)) ? ((raw % 1) + 1) % 1 : (sacPhase + 1 / SACCADE_STEPS) % 1;
+      const pos = patternPos(ph * period, period, w, h);
+      const dist = Math.hypot(pos.x - here.x, pos.y - here.y);
+      if (dist > bestDist) { bestDist = dist; best = { ph: ph, pos: pos }; }
+      if (dist >= minDist) break;
+    }
+    sacPhase = best.ph;
+    sacStep++;
+    placeDot(best.pos);
+    dotEl.classList.remove('landed');
+    void dotEl.offsetWidth;
+    dotEl.classList.add('landed');
+    sacTimer = setTimeout(sacTick, parseInt(dotDwell.value, 10));
+  }
+
+  function dotPlay() {
+    dotPlaying = true;
+    $('dotPlayBtn').textContent = 'Durdur';
+    if (dotMode.value === 'saccade') { sacPhase = 0; sacStep = 0; sacTick(); }
+    else { dotT0 = null; dotRAF = requestAnimationFrame(dotFrame); }
+  }
+  function dotStop() {
+    dotPlaying = false;
+    $('dotPlayBtn').textContent = 'Başlat';
+    if (dotRAF) cancelAnimationFrame(dotRAF);
+    dotRAF = null;
+    clearTimeout(sacTimer);
+    sacTimer = null;
+    dotEl.classList.remove('landed');
+  }
+  $('dotPlayBtn').addEventListener('click', () => { dotPlaying ? dotStop() : dotPlay(); });
+  updateDotNote();
+
+  const flashBox = $('flashBox'), flashDur = $('flashDur'), flashGap = $('flashGap'), flashCount = $('flashCount');
+  const DEFAULT_FLASH_WORDS = ('okul kalem bilgi zaman fikir yıldız deniz orman güneş bulut hareket eğitim düşünce arkadaş şehir kitap yol renk yaprak taş').split(' ');
+  let flashT1 = null, flashT2 = null, flashIdx = 0, flashPlaying = false;
+  flashDur.addEventListener('input', () => $('flashDurValue').textContent = flashDur.value);
+  flashGap.addEventListener('input', () => $('flashGapValue').textContent = flashGap.value);
+  flashCount.addEventListener('input', () => $('flashCountValue').textContent = flashCount.value);
+  function flashCycle() {
+    const src = words.length ? words : DEFAULT_FLASH_WORDS;
+    const n = parseInt(flashCount.value, 10), slice = [];
+    for (let i = 0; i < n; i++) slice.push(src[(flashIdx + i) % src.length]);
+    flashIdx = (flashIdx + n) % src.length;
+    flashBox.textContent = slice.join(' ');
+    flashT1 = setTimeout(() => {
+      flashBox.textContent = '';
+      flashT2 = setTimeout(() => { if (flashPlaying) flashCycle(); }, parseInt(flashGap.value, 10));
+    }, parseInt(flashDur.value, 10));
+  }
+  function flashPlay() { flashPlaying = true; $('flashPlayBtn').textContent = 'Durdur'; flashIdx = 0; flashCycle(); }
+  function flashStop() {
+    flashPlaying = false; $('flashPlayBtn').textContent = 'Başlat';
+    clearTimeout(flashT1); clearTimeout(flashT2);
+    flashBox.textContent = 'Başlat\'a bas';
+  }
+  $('flashPlayBtn').addEventListener('click', () => { flashPlaying ? flashStop() : flashPlay(); });
+
+  const schulteGrid = $('schulteGrid'), schulteSize = $('schulteSize');
+  let schulteNext = 1, schulteT0 = null, schulteInt = null, schulteDone = false;
+  function buildSchulte() {
+    clearInterval(schulteInt);
+    schulteInt = null; schulteT0 = null; schulteNext = 1; schulteDone = false;
+    $('schulteTimer').textContent = '00.0 sn';
+    $('schulteStatus').textContent = 'Başlamak için 1\'e tıkla';
+    const n = parseInt(schulteSize.value, 10);
+    const nums = Array.from({ length: n * n }, (_, i) => i + 1);
+    for (let i = nums.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [nums[i], nums[j]] = [nums[j], nums[i]]; }
+    schulteGrid.style.gridTemplateColumns = 'repeat(' + n + ', 1fr)';
+    schulteGrid.innerHTML = '';
+    nums.forEach(num => {
+      const cell = document.createElement('div');
+      cell.className = 'schulte-cell';
+      cell.textContent = num;
+      cell.addEventListener('click', () => onSchulteClick(cell, num));
+      schulteGrid.appendChild(cell);
+    });
+  }
+  function onSchulteClick(cell, num) {
+    if (schulteDone) return;
+    if (num !== schulteNext) {
+      cell.classList.add('wrong');
+      setTimeout(() => cell.classList.remove('wrong'), 250);
+      return;
+    }
+    if (schulteNext === 1) {
+      schulteT0 = performance.now();
+      schulteInt = setInterval(() => { $('schulteTimer').textContent = ((performance.now() - schulteT0) / 1000).toFixed(1) + ' sn'; }, 100);
+    }
+    cell.classList.add('done');
+    const n = parseInt(schulteSize.value, 10);
+    schulteNext++;
+    if (schulteNext > n * n) {
+      schulteDone = true;
+      clearInterval(schulteInt);
+      $('schulteStatus').textContent = 'Tamamlandı! Süre: ' + ((performance.now() - schulteT0) / 1000).toFixed(1) + ' sn';
+    } else $('schulteStatus').textContent = 'Sırada: ' + schulteNext;
+  }
+  $('schulteNewBtn').addEventListener('click', buildSchulte);
+  schulteSize.addEventListener('change', buildSchulte);
+  buildSchulte();
+
+  const growStage = $('growStage'), growShape = $('growShape'), growShapeSelect = $('growShapeSelect'), growSpeed = $('growSpeed');
+  let growRAF = null, growT0 = null, growPlaying = false;
+  growSpeed.addEventListener('input', () => $('growSpeedValue').textContent = growSpeed.value);
+  growShapeSelect.addEventListener('change', () => { growShape.className = 'grow-shape ' + growShapeSelect.value; });
+  function growFrame(ts) {
+    if (!growT0) growT0 = ts;
+    const period = parseFloat(growSpeed.value) * 1000;
+    const phase = ((ts - growT0) % period) / period;
+    const scale = 0.5 + 0.5 * Math.sin(phase * Math.PI * 2 - Math.PI / 2);
+    const maxW = growStage.clientWidth * 0.9, maxH = growStage.clientHeight * 0.85;
+    let w, h;
+    if (growShapeSelect.value === 'rect') { w = 40 + scale * maxW; h = 20 + scale * (maxH * 0.5); }
+    else { w = 10 + scale * Math.min(maxW, maxH); h = w; }
+    growShape.style.width = w + 'px'; growShape.style.height = h + 'px';
+    if (growPlaying) growRAF = requestAnimationFrame(growFrame);
+  }
+  function growPlay() { growPlaying = true; growT0 = null; $('growPlayBtn').textContent = 'Durdur'; growRAF = requestAnimationFrame(growFrame); }
+  function growStop() { growPlaying = false; $('growPlayBtn').textContent = 'Başlat'; if (growRAF) cancelAnimationFrame(growRAF); growRAF = null; }
+  $('growPlayBtn').addEventListener('click', () => { growPlaying ? growStop() : growPlay(); });
+})();
+</script>
+</body>
+</html>
