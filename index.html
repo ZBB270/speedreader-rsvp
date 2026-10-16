@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Hızlı Okuma</title>
+<!-- İçerik güvenlik politikası: sayfa yalnızca kendi kaynaklarını yükleyebilir.
+     GitHub Pages sunucu başlığı eklemeye izin vermediği için meta olarak verilir.
+     blob: ve data: izinleri PDF okuyucunun işçi dosyası ve gömülü yazı tipleri
+     ile yedek dosyasının indirilmesi için gerekli. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1b1e26">
 <meta name="description" content="RSVP yöntemiyle hızlı okuma uygulaması: kitaplarını aktar, kaldığın yerden devam et.">
@@ -397,7 +402,7 @@
 <div class="wrap">
   <div class="title-row">
     <h1>Hızlı Okuma</h1>
-    <span class="version-badge">8.4</span>
+    <span class="version-badge">8.5</span>
   </div>
   <div class="subtitle">Kitaplığından seç, kaldığın yerden devam et, gösterimi kendine göre ayarla.</div>
 

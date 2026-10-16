@@ -102,6 +102,7 @@ Kurduktan sonra uygulama kendi simgesiyle, tarayıcı çubukları olmadan açıl
 - **Veri cihazdan çıkmaz.** Sunucu, hesap, analitik veya takip kodu yok. Aktardığın kitaplar ve okuma konumun yalnızca kendi tarayıcının deposunda (localStorage / IndexedDB) tutulur; hiçbir yere gönderilmez.
 - **Dosyalar yerelde işlenir.** PDF, EPUB ve DOCX dosyaları tarayıcının içinde ayrıştırılır, yüklenmez.
 - **Dış sunucuya hiç bağlanmaz.** v8'den itibaren kütüphaneler `lib/` klasöründen yüklenir; uygulama çalışırken hiçbir üçüncü taraf isteği yapılmaz, IP adresin kimseye gitmez. (Dosyalar cdnjs'ten indirilip SHA-512 imzalarıyla doğrulanmıştır; v7 bunları CDN'den `integrity` parmak iziyle çekiyordu.)
+- **İçerik güvenlik politikası (CSP).** Sayfa, kendi kaynakları dışında hiçbir betik veya kaynak yükleyemez; eklenti/nesne gömme kapalı. GitHub Pages sunucu başlığı eklemeye izin vermediği için politika sayfanın içine gömülmüştür.
 - **Metin güvenli şekilde işlenir.** İçe aktarılan belgelerdeki HTML kaçırılır (escape), EPUB içindeki `script` ve `style` etiketleri ayrıştırma sırasında silinir; belge içeriği hiçbir zaman çalıştırılabilir kod olarak sayfaya yazılmaz.
 - **Depo herkese açıktır**, ancak okuma verilerin depoda değildir — yalnızca uygulama kodu yayınlanmıştır.
 
